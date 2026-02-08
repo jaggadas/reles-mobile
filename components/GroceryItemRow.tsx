@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import type { GroceryItem } from '@/lib/types';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { colors, spacing, typography } from '@/constants/colors';
 
 interface Props {
   item: GroceryItem;
@@ -11,15 +12,29 @@ interface Props {
 }
 
 export function GroceryItemRow({ item, onToggle, onLongPress }: Props) {
-  const textColor = useThemeColor({}, 'text');
-  const subtextColor = useThemeColor({ light: '#6b7280', dark: '#9ca3af' }, 'text');
+  const textColor = useThemeColor(
+    { light: colors.light.text, dark: colors.dark.text },
+    'text',
+  );
+  const subtextColor = useThemeColor(
+    { light: colors.light.textSecondary, dark: colors.dark.textSecondary },
+    'text',
+  );
+  const checkedColor = useThemeColor(
+    { light: colors.light.checkboxChecked, dark: colors.dark.checkboxChecked },
+    'tint',
+  );
+  const uncheckedColor = useThemeColor(
+    { light: colors.light.checkboxUnchecked, dark: colors.dark.checkboxUnchecked },
+    'text',
+  );
 
   return (
     <Pressable onPress={onToggle} onLongPress={onLongPress} style={styles.row}>
       <MaterialIcons
         name={item.checked ? 'check-box' : 'check-box-outline-blank'}
         size={24}
-        color={item.checked ? '#22c55e' : '#9ca3af'}
+        color={item.checked ? (checkedColor as string) : (uncheckedColor as string)}
       />
       <View style={styles.content}>
         <Text
@@ -52,18 +67,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 10,
-    paddingHorizontal: 16,
-    gap: 12,
+    paddingHorizontal: spacing.lg,
+    gap: spacing.md,
   },
   content: {
     flex: 1,
   },
   name: {
-    fontSize: 15,
-    fontWeight: '500',
+    fontSize: typography.size.lg,
+    fontWeight: typography.weight.medium,
   },
   quantity: {
-    fontSize: 13,
+    fontSize: typography.size.md,
     marginTop: 1,
   },
   checkedText: {

@@ -13,8 +13,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { colors, spacing, radius, typography } from '@/constants/colors';
 import { ExtractionCard } from '@/components/ExtractionCard';
 import { VideoSearchResults } from '@/components/VideoSearchResults';
+import { EmptyState } from '@/components/ui';
 import type { ExtractionPhase, VideoSearchResult } from '@/lib/types';
 import {
   extractVideoId,
@@ -33,10 +35,30 @@ export default function HomeScreen() {
   const [error, setError] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
 
-  const bgColor = useThemeColor({}, 'background');
-  const textColor = useThemeColor({}, 'text');
-  const inputBg = useThemeColor({ light: '#f3f4f6', dark: '#1f2937' }, 'background');
-  const placeholderColor = useThemeColor({ light: '#9ca3af', dark: '#6b7280' }, 'text');
+  const bgColor = useThemeColor(
+    { light: colors.light.background, dark: colors.dark.background },
+    'background',
+  );
+  const textColor = useThemeColor(
+    { light: colors.light.text, dark: colors.dark.text },
+    'text',
+  );
+  const inputBg = useThemeColor(
+    { light: colors.light.inputBackground, dark: colors.dark.inputBackground },
+    'background',
+  );
+  const placeholderColor = useThemeColor(
+    { light: colors.light.textMuted, dark: colors.dark.textMuted },
+    'text',
+  );
+  const primaryColor = useThemeColor(
+    { light: colors.light.primary, dark: colors.dark.primary },
+    'tint',
+  );
+  const primaryTextColor = useThemeColor(
+    { light: colors.light.textOnPrimary, dark: colors.dark.textOnPrimary },
+    'text',
+  );
 
   const handleSearch = useCallback(async () => {
     const trimmed = query.trim();
@@ -46,14 +68,12 @@ export default function HomeScreen() {
     setError(null);
     setSearchResults([]);
 
-    // Check if it's a YouTube URL
     const videoId = extractVideoId(trimmed);
     if (videoId) {
       await handleExtract(videoId);
       return;
     }
 
-    // Text search
     setIsSearching(true);
     try {
       const results = await searchRecipeVideos(trimmed);
@@ -72,7 +92,6 @@ export default function HomeScreen() {
     setError(null);
     setSearchResults([]);
 
-    // Check if already extracted
     const existing = await findRecipeByVideoId(videoId);
     if (existing) {
       router.push(`/recipe/${existing.id}`);
@@ -143,14 +162,17 @@ export default function HomeScreen() {
             </Pressable>
           )}
         </View>
-        <Pressable onPress={handleSearch} style={styles.searchButton}>
-          <Text style={styles.searchButtonText}>Go</Text>
+        <Pressable
+          onPress={handleSearch}
+          style={[styles.searchButton, { backgroundColor: primaryColor }]}
+        >
+          <Text style={[styles.searchButtonText, { color: primaryTextColor }]}>Go</Text>
         </Pressable>
       </View>
 
       {isSearching && (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" />
+          <ActivityIndicator size="large" color={primaryColor as string} />
           <Text style={[styles.loadingText, { color: textColor }]}>Searching...</Text>
         </View>
       )}
@@ -162,15 +184,11 @@ export default function HomeScreen() {
       )}
 
       {!isSearching && searchResults.length === 0 && phase === 'idle' && !error && (
-        <View style={styles.emptyState}>
-          <MaterialIcons name="restaurant" size={64} color={placeholderColor as string} />
-          <Text style={[styles.emptyTitle, { color: textColor }]}>
-            Extract Recipes from YouTube
-          </Text>
-          <Text style={[styles.emptySubtitle, { color: placeholderColor as string }]}>
-            Paste a YouTube URL or search for cooking videos to get started.
-          </Text>
-        </View>
+        <EmptyState
+          icon="restaurant"
+          title="Extract Recipes from YouTube"
+          subtitle="Paste a YouTube URL or search for cooking videos to get started."
+        />
       )}
     </SafeAreaView>
   );
@@ -179,63 +197,44 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
+    padding: spacing.lg,
   },
   searchContainer: {
     flexDirection: 'row',
-    gap: 8,
-    marginBottom: 8,
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
   },
   inputWrapper: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 10,
-    paddingHorizontal: 12,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
     height: 44,
-    gap: 8,
+    gap: spacing.sm,
   },
   input: {
     flex: 1,
-    fontSize: 15,
+    fontSize: typography.size.lg,
     height: '100%',
   },
   searchButton: {
-    backgroundColor: '#0a7ea4',
-    borderRadius: 10,
+    borderRadius: radius.md,
     height: 44,
-    paddingHorizontal: 16,
+    paddingHorizontal: spacing.lg,
     justifyContent: 'center',
     alignItems: 'center',
   },
   searchButtonText: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: typography.size.lg,
+    fontWeight: typography.weight.semibold,
   },
   loadingContainer: {
     alignItems: 'center',
-    paddingVertical: 32,
-    gap: 8,
+    paddingVertical: spacing.xxl,
+    gap: spacing.sm,
   },
   loadingText: {
-    fontSize: 14,
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 32,
-    gap: 12,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  emptySubtitle: {
-    fontSize: 14,
-    textAlign: 'center',
-    lineHeight: 20,
+    fontSize: typography.size.base,
   },
 });

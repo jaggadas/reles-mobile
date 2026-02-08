@@ -1,14 +1,15 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { StyleSheet, FlatList } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { colors, spacing } from '@/constants/colors';
 import { RecipeCard } from '@/components/RecipeCard';
+import { EmptyState } from '@/components/ui';
 import type { Recipe } from '@/lib/types';
-import { getAllRecipes } from '@/lib/storage';
 import {
+  getAllRecipes,
   addRecipeToGroceryList,
   removeRecipeFromGroceryList,
   isRecipeInGroceryList,
@@ -19,9 +20,10 @@ export default function RecipesScreen() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [grocerySet, setGrocerySet] = useState<Set<string>>(new Set());
 
-  const bgColor = useThemeColor({}, 'background');
-  const textColor = useThemeColor({}, 'text');
-  const placeholderColor = useThemeColor({ light: '#9ca3af', dark: '#6b7280' }, 'text');
+  const bgColor = useThemeColor(
+    { light: colors.light.background, dark: colors.dark.background },
+    'background',
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -54,15 +56,11 @@ export default function RecipesScreen() {
   if (recipes.length === 0) {
     return (
       <SafeAreaView edges={['bottom']} style={[styles.container, { backgroundColor: bgColor }]}>
-        <View style={styles.emptyState}>
-          <MaterialIcons name="menu-book" size={64} color={placeholderColor as string} />
-          <Text style={[styles.emptyTitle, { color: textColor }]}>
-            No Recipes Yet
-          </Text>
-          <Text style={[styles.emptySubtitle, { color: placeholderColor as string }]}>
-            Go to the Extract tab to extract recipes from YouTube videos.
-          </Text>
-        </View>
+        <EmptyState
+          icon="menu-book"
+          title="No Recipes Yet"
+          subtitle="Go to the Extract tab to extract recipes from YouTube videos."
+        />
       </SafeAreaView>
     );
   }
@@ -91,23 +89,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   list: {
-    paddingVertical: 8,
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 32,
-    gap: 12,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  emptySubtitle: {
-    fontSize: 14,
-    textAlign: 'center',
-    lineHeight: 20,
+    paddingVertical: spacing.sm,
   },
 });

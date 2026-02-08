@@ -16,7 +16,9 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import * as WebBrowser from 'expo-web-browser';
 
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { colors, spacing, radius, typography } from '@/constants/colors';
 import { MetadataCard } from '@/components/MetadataCard';
+import { Button, Tag } from '@/components/ui';
 import type { Recipe } from '@/lib/types';
 import { formatDifficulty, formatCuisine, formatAllergens } from '@/lib/format';
 import {
@@ -27,7 +29,7 @@ import {
   removeRecipeFromGroceryList,
   isRecipeInGroceryList,
 } from '@/lib/storage';
-import { createInstacartRecipeLink, searchRecipeVideos } from '@/lib/api';
+import { createInstacartRecipeLink } from '@/lib/api';
 
 export default function RecipeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -38,10 +40,58 @@ export default function RecipeDetailScreen() {
   const [inGroceryList, setInGroceryList] = useState(false);
   const [instacartLoading, setInstacartLoading] = useState(false);
 
-  const bgColor = useThemeColor({}, 'background');
-  const textColor = useThemeColor({}, 'text');
-  const subtextColor = useThemeColor({ light: '#6b7280', dark: '#9ca3af' }, 'text');
-  const cardBg = useThemeColor({ light: '#f9fafb', dark: '#1f2937' }, 'background');
+  const bgColor = useThemeColor(
+    { light: colors.light.background, dark: colors.dark.background },
+    'background',
+  );
+  const textColor = useThemeColor(
+    { light: colors.light.text, dark: colors.dark.text },
+    'text',
+  );
+  const subtextColor = useThemeColor(
+    { light: colors.light.textSecondary, dark: colors.dark.textSecondary },
+    'text',
+  );
+  const cardBg = useThemeColor(
+    { light: colors.light.card, dark: colors.dark.card },
+    'background',
+  );
+  const borderColor = useThemeColor(
+    { light: colors.light.borderLight, dark: colors.dark.borderLight },
+    'text',
+  );
+  const primaryColor = useThemeColor(
+    { light: colors.light.primary, dark: colors.dark.primary },
+    'tint',
+  );
+  const linkColor = useThemeColor(
+    { light: colors.light.link, dark: colors.dark.link },
+    'tint',
+  );
+  const allergenBg = useThemeColor(
+    { light: colors.light.allergenBg, dark: colors.dark.allergenBg },
+    'background',
+  );
+  const allergenIcon = useThemeColor(
+    { light: colors.light.allergenIcon, dark: colors.dark.allergenIcon },
+    'text',
+  );
+  const allergenText = useThemeColor(
+    { light: colors.light.allergenText, dark: colors.dark.allergenText },
+    'text',
+  );
+  const stepCircle = useThemeColor(
+    { light: colors.light.stepCircle, dark: colors.dark.stepCircle },
+    'tint',
+  );
+  const errorColor = useThemeColor(
+    { light: colors.light.deleteText, dark: colors.dark.deleteText },
+    'text',
+  );
+  const textOnPrimary = useThemeColor(
+    { light: colors.light.textOnPrimary, dark: colors.dark.textOnPrimary },
+    'text',
+  );
 
   const loadRecipe = useCallback(async () => {
     if (!id) return;
@@ -133,7 +183,7 @@ export default function RecipeDetailScreen() {
   if (!recipe) {
     return (
       <View style={[styles.loading, { backgroundColor: bgColor }]}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color={primaryColor as string} />
       </View>
     );
   }
@@ -142,6 +192,8 @@ export default function RecipeDetailScreen() {
     <>
       <Stack.Screen options={{ title: recipe.title }} />
       <ScrollView style={[styles.container, { backgroundColor: bgColor }]} contentContainerStyle={styles.content}>
+        {/* TODO: IMAGE REPLACEMENT PENDING — Add branded header illustration here */}
+
         {/* Title */}
         <TextInput
           style={[styles.title, { color: textColor }]}
@@ -162,26 +214,18 @@ export default function RecipeDetailScreen() {
         {/* Tags row */}
         <View style={styles.tagsRow}>
           {recipe.cuisine && recipe.cuisine !== 'OTHER' && (
-            <View style={[styles.tag, { backgroundColor: cardBg }]}>
-              <Text style={[styles.tagText, { color: textColor }]}>
-                {formatCuisine(recipe.cuisine)}
-              </Text>
-            </View>
+            <Tag label={formatCuisine(recipe.cuisine)} />
           )}
           {recipe.difficulty ? (
-            <View style={[styles.tag, { backgroundColor: cardBg }]}>
-              <Text style={[styles.tagText, { color: textColor }]}>
-                {formatDifficulty(recipe.difficulty)}
-              </Text>
-            </View>
+            <Tag label={formatDifficulty(recipe.difficulty)} />
           ) : null}
         </View>
 
         {/* Allergens */}
         {recipe.allergens && recipe.allergens.length > 0 && (
-          <View style={[styles.allergenRow, { backgroundColor: '#fef3c7' }]}>
-            <MaterialIcons name="warning" size={16} color="#d97706" />
-            <Text style={styles.allergenText}>
+          <View style={[styles.allergenRow, { backgroundColor: allergenBg }]}>
+            <MaterialIcons name="warning" size={16} color={allergenIcon as string} />
+            <Text style={[styles.allergenText, { color: allergenText }]}>
               {formatAllergens(recipe.allergens)}
             </Text>
           </View>
@@ -189,37 +233,28 @@ export default function RecipeDetailScreen() {
 
         {/* Action buttons */}
         <View style={styles.actions}>
-          <Pressable
+          <Button
+            title={inGroceryList ? 'Remove from List' : 'Add to List'}
+            icon={inGroceryList ? 'remove-shopping-cart' : 'add-shopping-cart'}
             onPress={handleToggleGrocery}
-            style={[styles.actionButton, inGroceryList && styles.actionButtonActive]}
-          >
-            <MaterialIcons
-              name={inGroceryList ? "remove-shopping-cart" : "add-shopping-cart"}
-              size={18}
-              color={inGroceryList ? '#ef4444' : '#0a7ea4'}
-            />
-            <Text style={[styles.actionText, inGroceryList && { color: '#ef4444' }]}>
-              {inGroceryList ? 'Remove from List' : 'Add to List'}
-            </Text>
-          </Pressable>
-
-          <Pressable onPress={handleInstacart} style={styles.actionButton} disabled={instacartLoading}>
-            {instacartLoading ? (
-              <ActivityIndicator size="small" />
-            ) : (
-              <>
-                <MaterialIcons name="shopping-bag" size={18} color="#0a7ea4" />
-                <Text style={styles.actionText}>Instacart</Text>
-              </>
-            )}
-          </Pressable>
+            variant={inGroceryList ? 'destructive' : 'secondary'}
+            flex
+          />
+          <Button
+            title="Instacart"
+            icon="shopping-bag"
+            onPress={handleInstacart}
+            variant="secondary"
+            loading={instacartLoading}
+            flex
+          />
         </View>
 
         {/* Source video */}
         {recipe.videoId && (
           <Pressable
             onPress={() => Linking.openURL(recipe.url)}
-            style={[styles.videoCard, { backgroundColor: cardBg }]}
+            style={[styles.videoCard, { backgroundColor: cardBg, borderColor }]}
           >
             <Image source={{ uri: recipe.thumbnail }} style={styles.videoThumb} />
             <View style={styles.videoInfo}>
@@ -231,7 +266,7 @@ export default function RecipeDetailScreen() {
                   {recipe.channelTitle}
                 </Text>
               ) : null}
-              <Text style={[styles.videoLink, { color: '#0a7ea4' }]}>Watch on YouTube</Text>
+              <Text style={[styles.videoLink, { color: linkColor }]}>Watch on YouTube</Text>
             </View>
           </Pressable>
         )}
@@ -242,9 +277,7 @@ export default function RecipeDetailScreen() {
             <Text style={[styles.sectionTitle, { color: textColor }]}>Goes Well With</Text>
             <View style={styles.companionList}>
               {recipe.accompanyingRecipes.map((name, i) => (
-                <View key={i} style={[styles.companionChip, { backgroundColor: cardBg }]}>
-                  <Text style={[styles.companionText, { color: textColor }]}>{name}</Text>
-                </View>
+                <Tag key={i} label={name} variant="outlined" />
               ))}
             </View>
           </View>
@@ -256,7 +289,7 @@ export default function RecipeDetailScreen() {
             Ingredients ({recipe.ingredients.length})
           </Text>
           {recipe.ingredients.map((ing, i) => (
-            <View key={i} style={styles.ingredientRow}>
+            <View key={i} style={[styles.ingredientRow, { borderBottomColor: borderColor }]}>
               <TextInput
                 style={[styles.ingredientQuantity, { color: subtextColor }]}
                 value={ing.quantity}
@@ -277,8 +310,8 @@ export default function RecipeDetailScreen() {
             <Text style={[styles.sectionTitle, { color: textColor }]}>Instructions</Text>
             {recipe.instructions.map((step, i) => (
               <View key={i} style={styles.instructionRow}>
-                <View style={styles.stepNumber}>
-                  <Text style={styles.stepNumberText}>{i + 1}</Text>
+                <View style={[styles.stepNumber, { backgroundColor: stepCircle }]}>
+                  <Text style={[styles.stepNumberText, { color: textOnPrimary }]}>{i + 1}</Text>
                 </View>
                 <TextInput
                   style={[styles.instructionText, { color: textColor }]}
@@ -292,10 +325,13 @@ export default function RecipeDetailScreen() {
         )}
 
         {/* Delete button */}
-        <Pressable onPress={handleDelete} style={styles.deleteButton}>
-          <MaterialIcons name="delete" size={18} color="#ef4444" />
-          <Text style={styles.deleteText}>Delete Recipe</Text>
-        </Pressable>
+        <Button
+          title="Delete Recipe"
+          icon="delete"
+          onPress={handleDelete}
+          variant="destructive"
+          style={styles.deleteButton}
+        />
 
         <View style={{ height: 40 }} />
       </ScrollView>
@@ -308,7 +344,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    padding: 16,
+    padding: spacing.lg,
   },
   loading: {
     flex: 1,
@@ -316,69 +352,38 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontSize: 24,
-    fontWeight: '700',
-    marginBottom: 8,
+    fontSize: typography.size['4xl'],
+    fontWeight: typography.weight.bold,
+    marginBottom: spacing.sm,
   },
   tagsRow: {
     flexDirection: 'row',
-    gap: 8,
-    marginVertical: 4,
-  },
-  tag: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  tagText: {
-    fontSize: 13,
-    fontWeight: '500',
+    gap: spacing.sm,
+    marginVertical: spacing.xs,
   },
   allergenRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: spacing.sm,
     padding: 10,
-    borderRadius: 8,
-    marginVertical: 8,
+    borderRadius: radius.md,
+    marginVertical: spacing.sm,
   },
   allergenText: {
-    fontSize: 13,
-    color: '#92400e',
-    fontWeight: '500',
+    fontSize: typography.size.md,
+    fontWeight: typography.weight.medium,
   },
   actions: {
     flexDirection: 'row',
-    gap: 8,
-    marginVertical: 12,
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-  },
-  actionButtonActive: {
-    borderColor: '#fecaca',
-    backgroundColor: '#fef2f2',
-  },
-  actionText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#0a7ea4',
+    gap: spacing.sm,
+    marginVertical: spacing.md,
   },
   videoCard: {
     flexDirection: 'row',
-    borderRadius: 12,
+    borderRadius: radius.lg,
     overflow: 'hidden',
-    marginVertical: 8,
+    marginVertical: spacing.sm,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
   },
   videoThumb: {
     width: 120,
@@ -390,96 +395,69 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   videoTitle: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: typography.size.md,
+    fontWeight: typography.weight.semibold,
     marginBottom: 2,
   },
   videoChannel: {
-    fontSize: 12,
+    fontSize: typography.size.sm,
     marginBottom: 2,
   },
   videoLink: {
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.medium,
   },
   section: {
-    marginTop: 20,
+    marginTop: spacing.xl,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 12,
+    fontSize: typography.size['2xl'],
+    fontWeight: typography.weight.bold,
+    marginBottom: spacing.md,
   },
   companionList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-  },
-  companionChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-  },
-  companionText: {
-    fontSize: 13,
+    gap: spacing.sm,
   },
   ingredientRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 6,
+    paddingVertical: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#e5e7eb',
   },
   ingredientQuantity: {
     width: 90,
-    fontSize: 14,
-    marginRight: 8,
+    fontSize: typography.size.base,
+    marginRight: spacing.sm,
   },
   ingredientName: {
     flex: 1,
-    fontSize: 14,
+    fontSize: typography.size.base,
   },
   instructionRow: {
     flexDirection: 'row',
-    marginBottom: 12,
+    marginBottom: spacing.md,
     gap: 10,
   },
   stepNumber: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#0a7ea4',
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 2,
   },
   stepNumberText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.bold,
   },
   instructionText: {
     flex: 1,
-    fontSize: 14,
+    fontSize: typography.size.base,
     lineHeight: 20,
   },
   deleteButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 12,
-    marginTop: 24,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#fecaca',
-    backgroundColor: '#fef2f2',
-  },
-  deleteText: {
-    color: '#ef4444',
-    fontSize: 14,
-    fontWeight: '600',
+    marginTop: spacing.xxl,
   },
 });

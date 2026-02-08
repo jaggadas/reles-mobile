@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { formatTime } from '@/lib/format';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { colors, spacing, radius, typography } from '@/constants/colors';
 
 interface Props {
   servings?: number;
@@ -12,9 +13,26 @@ interface Props {
 }
 
 export function MetadataCard({ servings, prepTimeMinutes, cookTimeMinutes, caloriesKcal }: Props) {
-  const cardBg = useThemeColor({}, 'background');
-  const textColor = useThemeColor({}, 'text');
-  const subtextColor = useThemeColor({ light: '#6b7280', dark: '#9ca3af' }, 'text');
+  const cardBg = useThemeColor(
+    { light: colors.light.card, dark: colors.dark.card },
+    'background',
+  );
+  const textColor = useThemeColor(
+    { light: colors.light.text, dark: colors.dark.text },
+    'text',
+  );
+  const subtextColor = useThemeColor(
+    { light: colors.light.textSecondary, dark: colors.dark.textSecondary },
+    'text',
+  );
+  const borderColor = useThemeColor(
+    { light: colors.light.borderLight, dark: colors.dark.borderLight },
+    'text',
+  );
+  const accentColor = useThemeColor(
+    { light: colors.light.accent, dark: colors.dark.accent },
+    'tint',
+  );
 
   const items: { icon: string; label: string; value: string }[] = [];
 
@@ -34,10 +52,10 @@ export function MetadataCard({ servings, prepTimeMinutes, cookTimeMinutes, calor
   if (items.length === 0) return null;
 
   return (
-    <View style={[styles.card, { backgroundColor: cardBg }]}>
+    <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
       {items.map((item) => (
         <View key={item.label} style={styles.item}>
-          <MaterialIcons name={item.icon as any} size={20} color="#0a7ea4" />
+          <MaterialIcons name={item.icon as any} size={20} color={accentColor as string} />
           <Text style={[styles.value, { color: textColor }]}>{item.value}</Text>
           <Text style={[styles.label, { color: subtextColor }]}>{item.label}</Text>
         </View>
@@ -50,21 +68,20 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    borderRadius: 12,
-    padding: 12,
-    marginVertical: 8,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    marginVertical: spacing.sm,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
   },
   item: {
     alignItems: 'center',
     gap: 2,
   },
   value: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: typography.size.lg,
+    fontWeight: typography.weight.semibold,
   },
   label: {
-    fontSize: 11,
+    fontSize: typography.size.xs,
   },
 });

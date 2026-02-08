@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable, Image, FlatList } from 'react-native';
 import type { VideoSearchResult } from '@/lib/types';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { colors, spacing, radius, typography } from '@/constants/colors';
 
 interface Props {
   results: VideoSearchResult[];
@@ -9,8 +10,18 @@ interface Props {
 }
 
 export function VideoSearchResults({ results, onSelect }: Props) {
-  const textColor = useThemeColor({}, 'text');
-  const subtextColor = useThemeColor({ light: '#6b7280', dark: '#9ca3af' }, 'text');
+  const textColor = useThemeColor(
+    { light: colors.light.text, dark: colors.dark.text },
+    'text',
+  );
+  const subtextColor = useThemeColor(
+    { light: colors.light.textSecondary, dark: colors.dark.textSecondary },
+    'text',
+  );
+  const separatorColor = useThemeColor(
+    { light: colors.light.separator, dark: colors.dark.separator },
+    'text',
+  );
 
   if (results.length === 0) return null;
 
@@ -19,7 +30,7 @@ export function VideoSearchResults({ results, onSelect }: Props) {
       data={results}
       keyExtractor={(item) => item.videoId}
       renderItem={({ item }) => (
-        <Pressable onPress={() => onSelect(item)} style={styles.item}>
+        <Pressable onPress={() => onSelect(item)} style={[styles.item, { borderBottomColor: separatorColor }]}>
           <Image source={{ uri: item.thumbnail }} style={styles.thumbnail} />
           <View style={styles.textContainer}>
             <Text style={[styles.title, { color: textColor }]} numberOfLines={2}>
@@ -42,26 +53,25 @@ const styles = StyleSheet.create({
   },
   item: {
     flexDirection: 'row',
-    padding: 12,
+    padding: spacing.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#e5e7eb',
   },
   thumbnail: {
     width: 120,
     height: 68,
-    borderRadius: 8,
+    borderRadius: radius.md,
   },
   textContainer: {
     flex: 1,
-    marginLeft: 12,
+    marginLeft: spacing.md,
     justifyContent: 'center',
   },
   title: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 4,
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.semibold,
+    marginBottom: spacing.xs,
   },
   channel: {
-    fontSize: 12,
+    fontSize: typography.size.sm,
   },
 });

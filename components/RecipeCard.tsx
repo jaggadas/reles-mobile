@@ -4,6 +4,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import type { Recipe } from '@/lib/types';
 import { formatTime, formatDifficulty } from '@/lib/format';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { colors, spacing, radius, typography } from '@/constants/colors';
 
 interface Props {
   recipe: Recipe;
@@ -13,12 +14,34 @@ interface Props {
 }
 
 export function RecipeCard({ recipe, onPress, onAddToGrocery, isInGroceryList }: Props) {
-  const cardBg = useThemeColor({}, 'background');
-  const textColor = useThemeColor({}, 'text');
-  const subtextColor = useThemeColor({ light: '#6b7280', dark: '#9ca3af' }, 'text');
+  const cardBg = useThemeColor(
+    { light: colors.light.card, dark: colors.dark.card },
+    'background',
+  );
+  const textColor = useThemeColor(
+    { light: colors.light.text, dark: colors.dark.text },
+    'text',
+  );
+  const subtextColor = useThemeColor(
+    { light: colors.light.textSecondary, dark: colors.dark.textSecondary },
+    'text',
+  );
+  const borderColor = useThemeColor(
+    { light: colors.light.borderLight, dark: colors.dark.borderLight },
+    'text',
+  );
+  const primaryColor = useThemeColor(
+    { light: colors.light.primary, dark: colors.dark.primary },
+    'tint',
+  );
+  const errorColor = useThemeColor(
+    { light: colors.light.error, dark: colors.dark.error },
+    'text',
+  );
 
   return (
-    <Pressable onPress={onPress} style={[styles.card, { backgroundColor: cardBg }]}>
+    <Pressable onPress={onPress} style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
+      {/* TODO: IMAGE REPLACEMENT PENDING — Replace thumbnail fallback with branded placeholder */}
       <Image source={{ uri: recipe.thumbnail }} style={styles.thumbnail} />
       <View style={styles.content}>
         <Text style={[styles.title, { color: textColor }]} numberOfLines={2}>
@@ -54,7 +77,7 @@ export function RecipeCard({ recipe, onPress, onAddToGrocery, isInGroceryList }:
           <MaterialIcons
             name={isInGroceryList ? "remove-shopping-cart" : "add-shopping-cart"}
             size={22}
-            color={isInGroceryList ? '#ef4444' : '#0a7ea4'}
+            color={isInGroceryList ? (errorColor as string) : (primaryColor as string)}
           />
         </Pressable>
       )}
@@ -65,12 +88,11 @@ export function RecipeCard({ recipe, onPress, onAddToGrocery, isInGroceryList }:
 const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
-    borderRadius: 12,
+    borderRadius: radius.lg,
     overflow: 'hidden',
-    marginHorizontal: 16,
-    marginVertical: 6,
+    marginHorizontal: spacing.lg,
+    marginVertical: spacing.sm,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
   },
   thumbnail: {
     width: 100,
@@ -82,20 +104,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   title: {
-    fontSize: 15,
-    fontWeight: '600',
-    marginBottom: 4,
+    fontSize: typography.size.lg,
+    fontWeight: typography.weight.semibold,
+    marginBottom: spacing.xs,
   },
   meta: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: spacing.sm,
   },
   metaText: {
-    fontSize: 12,
+    fontSize: typography.size.sm,
   },
   addButton: {
     justifyContent: 'center',
-    paddingHorizontal: 12,
+    paddingHorizontal: spacing.md,
   },
 });

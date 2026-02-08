@@ -3,14 +3,21 @@ import { View, Text, StyleSheet } from 'react-native';
 import type { AisleCategory } from '@/lib/types';
 import { AISLE_LABELS, AISLE_EMOJI } from '@/lib/aisles';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { colors, spacing, typography } from '@/constants/colors';
 
 interface Props {
   aisle: AisleCategory;
 }
 
 export function AisleSection({ aisle }: Props) {
-  const textColor = useThemeColor({}, 'text');
-  const bgColor = useThemeColor({ light: '#f3f4f6', dark: '#1f2937' }, 'background');
+  const textColor = useThemeColor(
+    { light: colors.light.text, dark: colors.dark.text },
+    'text',
+  );
+  const bgColor = useThemeColor(
+    { light: colors.light.inputBackground, dark: colors.dark.inputBackground },
+    'background',
+  );
 
   return (
     <View style={[styles.header, { backgroundColor: bgColor }]}>
@@ -23,11 +30,11 @@ export function AisleSection({ aisle }: Props) {
 
 const styles = StyleSheet.create({
   header: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
   },
   text: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.bold,
   },
 });

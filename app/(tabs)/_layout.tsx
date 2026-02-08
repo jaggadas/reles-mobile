@@ -4,15 +4,26 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { Colors } from '@/constants/theme';
+import { colors } from '@/constants/colors';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const scheme = colorScheme ?? 'light';
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: Colors[scheme].tint,
+        tabBarInactiveTintColor: Colors[scheme].tabIconDefault,
+        tabBarStyle: {
+          backgroundColor: colors[scheme].surface,
+          borderTopColor: colors[scheme].borderLight,
+        },
+        headerStyle: {
+          backgroundColor: colors[scheme].surface,
+        },
+        headerTintColor: colors[scheme].text,
         headerShown: true,
         tabBarButton: HapticTab,
       }}>
