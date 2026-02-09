@@ -12,11 +12,13 @@ import { useThemeColor } from '@/hooks/use-theme-color';
 import { colors, radius, spacing, typography } from '@/constants/colors';
 
 type Variant = 'primary' | 'secondary' | 'destructive' | 'ghost';
+type Size = 'default' | 'lg';
 
 interface ButtonProps {
   title: string;
   onPress: () => void;
   variant?: Variant;
+  size?: Size;
   icon?: React.ComponentProps<typeof MaterialIcons>['name'];
   loading?: boolean;
   disabled?: boolean;
@@ -29,6 +31,7 @@ export function Button({
   title,
   onPress,
   variant = 'primary',
+  size = 'default',
   icon,
   loading = false,
   disabled = false,
@@ -85,6 +88,7 @@ export function Button({
   };
 
   const v = variantStyles[variant];
+  const isLg = size === 'lg';
 
   return (
     <Pressable
@@ -92,6 +96,7 @@ export function Button({
       disabled={disabled || loading}
       style={({ pressed }) => [
         styles.base,
+        isLg && styles.baseLg,
         v.container,
         flex && styles.flex,
         (disabled || loading) && styles.disabled,
@@ -104,9 +109,9 @@ export function Button({
       ) : (
         <>
           {icon && (
-            <MaterialIcons name={icon} size={18} color={v.iconColor} />
+            <MaterialIcons name={icon} size={isLg ? 20 : 18} color={v.iconColor} />
           )}
-          <Text style={[styles.text, v.text, textStyle]}>{title}</Text>
+          <Text style={[styles.text, isLg && styles.textLg, v.text, textStyle]}>{title}</Text>
         </>
       )}
     </Pressable>
@@ -119,22 +124,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
-    paddingVertical: 10,
-    paddingHorizontal: spacing.lg,
+    height: 48,
+    paddingHorizontal: spacing.xl,
     borderRadius: radius.md,
     borderWidth: 1,
+  },
+  baseLg: {
+    height: 56,
+    borderRadius: radius.lg,
   },
   flex: {
     flex: 1,
   },
   text: {
-    fontSize: typography.size.base,
+    fontSize: typography.size.lg,
     fontWeight: typography.weight.semibold,
   },
+  textLg: {
+    fontSize: typography.size.xl,
+    fontWeight: typography.weight.bold,
+  },
   disabled: {
-    opacity: 0.5,
+    opacity: 0.45,
   },
   pressed: {
-    opacity: 0.8,
+    opacity: 0.85,
+    transform: [{ scale: 0.98 }],
   },
 });

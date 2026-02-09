@@ -5,8 +5,23 @@ import type {
   VideoDetails,
   VideoSearchResult,
 } from "./types";
+import { getAuthHeaders, clearAuthToken } from "./auth";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3001";
+
+async function authFetch(url: string, init?: RequestInit): Promise<Response> {
+  const headers = await getAuthHeaders();
+  const response = await fetch(url, {
+    ...init,
+    headers: { ...headers, ...init?.headers },
+  });
+
+  if (response.status === 401) {
+    await clearAuthToken();
+  }
+
+  return response;
+}
 
 export function extractVideoId(url: string): string | null {
   const pattern =
@@ -22,7 +37,7 @@ export function getThumbnailUrl(videoId: string): string {
 export async function searchRecipeVideos(
   query: string
 ): Promise<VideoSearchResult[]> {
-  const response = await fetch(
+  const response = await authFetch(
     `${API_BASE_URL}/api/video/search?q=${encodeURIComponent(query.trim())}`
   );
 
@@ -40,7 +55,7 @@ export async function searchRecipeVideos(
 export async function fetchVideoDetails(
   videoId: string
 ): Promise<VideoDetails> {
-  const response = await fetch(`${API_BASE_URL}/api/video/${videoId}/details`);
+  const response = await authFetch(`${API_BASE_URL}/api/video/${videoId}/details`);
 
   if (!response.ok) {
     return { title: "Untitled Recipe", channelTitle: "" };
@@ -56,7 +71,7 @@ export async function fetchVideoDetails(
 export async function extractIngredients(
   videoId: string
 ): Promise<ExtractedRecipe> {
-  const response = await fetch(`${API_BASE_URL}/api/video/${videoId}/extract`);
+  const response = await authFetch(`${API_BASE_URL}/api/video/${videoId}/extract`);
 
   if (response.status === 429) {
     throw new Error(
@@ -131,7 +146,7 @@ export async function createInstacartRecipeLink(recipe: {
   thumbnailUrl?: string;
   sourceUrl?: string;
 }): Promise<string> {
-  const response = await fetch(`${API_BASE_URL}/api/recipe/instacart`, {
+  const response = await authFetch(`${API_BASE_URL}/api/recipe/instacart`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(recipe),
@@ -150,7 +165,7 @@ export async function createInstacartGroceryLink(
   items: GroceryItem[],
   title?: string
 ): Promise<string> {
-  const response = await fetch(`${API_BASE_URL}/api/grocery/instacart`, {
+  const response = await authFetch(`${API_BASE_URL}/api/grocery/instacart`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ items, title }),
@@ -163,4 +178,28 @@ export async function createInstacartGroceryLink(
 
   const data = await response.json();
   return data.url;
+}
+
+export interface PopularRecipe {
+  videoId: string;
+  title: string;
+  timesMade: number;
+  timesAccessed: number;
+}
+
+export async function fetchPopularRecipes(
+  limit: number = 5
+): Promise<PopularRecipe[]> {
+  try {
+    const response = await authFetch(
+      `${API_BASE_URL}/api/recipe/popular?limit=${limit}`
+    );
+
+    if (!response.ok) return [];
+
+    const data = await response.json();
+    return data.recipes ?? [];
+  } catch {
+    return [];
+  }
 }

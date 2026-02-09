@@ -25,9 +25,6 @@ import {
   getRecipeById,
   updateRecipe,
   deleteRecipe,
-  addRecipeToGroceryList,
-  removeRecipeFromGroceryList,
-  isRecipeInGroceryList,
 } from '@/lib/storage';
 import { createInstacartRecipeLink } from '@/lib/api';
 
@@ -37,7 +34,6 @@ export default function RecipeDetailScreen() {
 
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [title, setTitle] = useState('');
-  const [inGroceryList, setInGroceryList] = useState(false);
   const [instacartLoading, setInstacartLoading] = useState(false);
 
   const bgColor = useThemeColor(
@@ -99,7 +95,6 @@ export default function RecipeDetailScreen() {
     if (r) {
       setRecipe(r);
       setTitle(r.title);
-      setInGroceryList(await isRecipeInGroceryList(r.id));
     }
   }, [id]);
 
@@ -111,16 +106,6 @@ export default function RecipeDetailScreen() {
     if (!recipe || title === recipe.title) return;
     await updateRecipe(recipe.id, { title });
     await loadRecipe();
-  }
-
-  async function handleToggleGrocery() {
-    if (!recipe) return;
-    if (inGroceryList) {
-      await removeRecipeFromGroceryList(recipe.id);
-    } else {
-      await addRecipeToGroceryList(recipe.id);
-    }
-    setInGroceryList(!inGroceryList);
   }
 
   async function handleInstacart() {
@@ -190,7 +175,7 @@ export default function RecipeDetailScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: recipe.title }} />
+      <Stack.Screen options={{ title: recipe.title, headerBackTitle: 'Back', headerBackVisible: true }} />
       <ScrollView style={[styles.container, { backgroundColor: bgColor }]} contentContainerStyle={styles.content}>
         {/* TODO: IMAGE REPLACEMENT PENDING — Add branded header illustration here */}
 
@@ -211,44 +196,44 @@ export default function RecipeDetailScreen() {
           caloriesKcal={recipe.caloriesKcal}
         />
 
-        {/* Tags row */}
-        <View style={styles.tagsRow}>
-          {recipe.cuisine && recipe.cuisine !== 'OTHER' && (
-            <Tag label={formatCuisine(recipe.cuisine)} />
-          )}
-          {recipe.difficulty ? (
-            <Tag label={formatDifficulty(recipe.difficulty)} />
-          ) : null}
-        </View>
-
-        {/* Allergens */}
-        {recipe.allergens && recipe.allergens.length > 0 && (
-          <View style={[styles.allergenRow, { backgroundColor: allergenBg }]}>
-            <MaterialIcons name="warning" size={16} color={allergenIcon as string} />
-            <Text style={[styles.allergenText, { color: allergenText }]}>
-              {formatAllergens(recipe.allergens)}
-            </Text>
+        {/* Details */}
+        {(recipe.cuisine || recipe.difficulty || (recipe.allergens && recipe.allergens.length > 0)) && (
+          <View style={[styles.detailsCard, { backgroundColor: cardBg, borderColor }]}>
+            {recipe.cuisine && recipe.cuisine !== 'OTHER' && (
+              <View style={styles.detailRow}>
+                <Text style={[styles.detailLabel, { color: subtextColor }]}>Cuisine</Text>
+                <Text style={[styles.detailValue, { color: textColor }]}>{formatCuisine(recipe.cuisine)}</Text>
+              </View>
+            )}
+            {recipe.difficulty && (
+              <View style={styles.detailRow}>
+                <Text style={[styles.detailLabel, { color: subtextColor }]}>Difficulty</Text>
+                <Text style={[styles.detailValue, { color: textColor }]}>{formatDifficulty(recipe.difficulty)}</Text>
+              </View>
+            )}
+            {recipe.allergens && recipe.allergens.length > 0 && (
+              <View style={styles.detailRow}>
+                <Text style={[styles.detailLabel, { color: subtextColor }]}>Allergens</Text>
+                <View style={[styles.allergenBadge, { backgroundColor: allergenBg }]}>
+                  <MaterialIcons name="warning" size={13} color={allergenIcon as string} />
+                  <Text style={[styles.allergenText, { color: allergenText }]}>
+                    {formatAllergens(recipe.allergens)}
+                  </Text>
+                </View>
+              </View>
+            )}
           </View>
         )}
 
-        {/* Action buttons */}
-        <View style={styles.actions}>
-          <Button
-            title={inGroceryList ? 'Remove from List' : 'Add to List'}
-            icon={inGroceryList ? 'remove-shopping-cart' : 'add-shopping-cart'}
-            onPress={handleToggleGrocery}
-            variant={inGroceryList ? 'destructive' : 'secondary'}
-            flex
-          />
-          <Button
-            title="Instacart"
-            icon="shopping-bag"
-            onPress={handleInstacart}
-            variant="secondary"
-            loading={instacartLoading}
-            flex
-          />
-        </View>
+        {/* Instacart */}
+        <Button
+          title="Order on Instacart"
+          icon="shopping-bag"
+          onPress={handleInstacart}
+          variant="secondary"
+          loading={instacartLoading}
+          style={styles.instacartButton}
+        />
 
         {/* Source video */}
         {recipe.videoId && (
@@ -277,7 +262,12 @@ export default function RecipeDetailScreen() {
             <Text style={[styles.sectionTitle, { color: textColor }]}>Goes Well With</Text>
             <View style={styles.companionList}>
               {recipe.accompanyingRecipes.map((name, i) => (
-                <Tag key={i} label={name} variant="outlined" />
+                <Pressable
+                  key={i}
+                  onPress={() => router.navigate({ pathname: '/(tabs)', params: { search: name } })}
+                >
+                  <Tag label={name} variant="outlined" />
+                </Pressable>
               ))}
             </View>
           </View>
@@ -324,14 +314,11 @@ export default function RecipeDetailScreen() {
           </View>
         )}
 
-        {/* Delete button */}
-        <Button
-          title="Delete Recipe"
-          icon="delete"
-          onPress={handleDelete}
-          variant="destructive"
-          style={styles.deleteButton}
-        />
+        {/* Delete */}
+        <Pressable onPress={handleDelete} style={styles.deleteLink}>
+          <MaterialIcons name="delete-outline" size={16} color={errorColor as string} />
+          <Text style={[styles.deleteLinkText, { color: errorColor }]}>Delete recipe</Text>
+        </Pressable>
 
         <View style={{ height: 40 }} />
       </ScrollView>
@@ -356,27 +343,41 @@ const styles = StyleSheet.create({
     fontWeight: typography.weight.bold,
     marginBottom: spacing.sm,
   },
-  tagsRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginVertical: spacing.xs,
+  detailsCard: {
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    marginVertical: spacing.md,
   },
-  allergenRow: {
+  detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
-    padding: 10,
-    borderRadius: radius.md,
-    marginVertical: spacing.sm,
+    justifyContent: 'space-between',
+    paddingVertical: spacing.md,
   },
-  allergenText: {
-    fontSize: typography.size.md,
+  detailLabel: {
+    fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
   },
-  actions: {
+  detailValue: {
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.semibold,
+  },
+  allergenBadge: {
     flexDirection: 'row',
-    gap: spacing.sm,
-    marginVertical: spacing.md,
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.sm,
+  },
+  allergenText: {
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.medium,
+  },
+  instacartButton: {
+    marginBottom: spacing.sm,
   },
   videoCard: {
     flexDirection: 'row',
@@ -457,7 +458,16 @@ const styles = StyleSheet.create({
     fontSize: typography.size.base,
     lineHeight: 20,
   },
-  deleteButton: {
+  deleteLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
     marginTop: spacing.xxl,
+    paddingVertical: spacing.md,
+  },
+  deleteLinkText: {
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.medium,
   },
 });

@@ -1,24 +1,60 @@
-import React from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import type { ExtractionPhase } from '@/lib/types';
 import { useThemeColor } from '@/hooks/use-theme-color';
-import { colors, spacing, radius, typography } from '@/constants/colors';
+import { colors, spacing, radius, typography, shadows } from '@/constants/colors';
 
 interface Props {
   phase: ExtractionPhase;
   error?: string | null;
 }
 
-const PHASE_LABELS: Record<ExtractionPhase, string> = {
-  idle: '',
-  fetching: 'Finding video...',
-  'fetching-transcript': 'Getting transcript...',
-  reading: 'Reading transcript...',
-  extracting: 'Extracting recipe...',
-  success: 'Recipe extracted!',
+const PHASE_CONFIG: Record<ExtractionPhase, { label: string; icon: string; step: number }> = {
+  idle: { label: '', icon: '', step: 0 },
+  fetching: { label: 'Finding video', icon: 'play-circle-outline', step: 1 },
+  'fetching-transcript': { label: 'Getting transcript', icon: 'subtitles', step: 2 },
+  reading: { label: 'Reading transcript', icon: 'auto-stories', step: 3 },
+  extracting: { label: 'Extracting recipe', icon: 'restaurant', step: 4 },
+  success: { label: 'Recipe ready!', icon: 'check-circle', step: 5 },
 };
 
+function ShimmerBlock({ width, height, style, shimmerAnim }: {
+  width: number | `${number}%`;
+  height: number;
+  style?: object;
+  shimmerAnim: Animated.Value;
+}) {
+  const baseColor = useThemeColor(
+    { light: colors.light.progressTrack, dark: colors.dark.progressTrack },
+    'background',
+  );
+
+  const opacity = shimmerAnim.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [0.4, 1, 0.4],
+  });
+
+  return (
+    <Animated.View
+      style={[
+        {
+          width,
+          height,
+          borderRadius: radius.sm,
+          backgroundColor: baseColor,
+          opacity,
+        },
+        style,
+      ]}
+    />
+  );
+}
+
 export function ExtractionCard({ phase, error }: Props) {
+  const shimmerAnim = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
   const cardBg = useThemeColor(
     { light: colors.light.card, dark: colors.dark.card },
     'background',
@@ -27,97 +63,222 @@ export function ExtractionCard({ phase, error }: Props) {
     { light: colors.light.text, dark: colors.dark.text },
     'text',
   );
-  const borderColor = useThemeColor(
-    { light: colors.light.borderLight, dark: colors.dark.borderLight },
+  const subtextColor = useThemeColor(
+    { light: colors.light.textSecondary, dark: colors.dark.textSecondary },
     'text',
   );
   const errorColor = useThemeColor(
     { light: colors.light.error, dark: colors.dark.error },
     'text',
   );
+  const errorBg = useThemeColor(
+    { light: colors.light.errorLight, dark: colors.dark.errorLight },
+    'background',
+  );
   const successColor = useThemeColor(
     { light: colors.light.success, dark: colors.dark.success },
     'text',
+  );
+  const primaryColor = useThemeColor(
+    { light: colors.light.primary, dark: colors.dark.primary },
+    'tint',
   );
   const progressTrack = useThemeColor(
     { light: colors.light.progressTrack, dark: colors.dark.progressTrack },
     'background',
   );
-  const progressFill = useThemeColor(
-    { light: colors.light.progressFill, dark: colors.dark.progressFill },
-    'tint',
+  const borderColor = useThemeColor(
+    { light: colors.light.borderLight, dark: colors.dark.borderLight },
+    'text',
   );
+
+  useEffect(() => {
+    if (phase !== 'idle') {
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+
+      const loop = Animated.loop(
+        Animated.timing(shimmerAnim, {
+          toValue: 1,
+          duration: 1500,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      );
+      loop.start();
+
+      return () => loop.stop();
+    } else {
+      fadeAnim.setValue(0);
+    }
+  }, [phase]);
 
   if (phase === 'idle' && !error) return null;
 
-  const isLoading = phase !== 'idle' && phase !== 'success';
+  if (error) {
+    return (
+      <View style={[styles.errorCard, { backgroundColor: errorBg, borderColor: errorColor }]}>
+        <MaterialIcons name="error-outline" size={20} color={errorColor as string} />
+        <Text style={[styles.errorText, { color: errorColor }]}>{error}</Text>
+      </View>
+    );
+  }
+
+  const config = PHASE_CONFIG[phase];
+  const isSuccess = phase === 'success';
+  const totalSteps = 4;
+  const currentStep = Math.min(config.step, totalSteps);
 
   return (
-    <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
-      {error ? (
-        <Text style={[styles.errorText, { color: errorColor }]}>{error}</Text>
-      ) : (
-        <View style={styles.row}>
-          {isLoading && <ActivityIndicator size="small" style={styles.spinner} />}
-          {phase === 'success' && <Text style={[styles.checkmark, { color: successColor }]}>&#10003;</Text>}
-          <Text style={[styles.label, { color: textColor }]}>
-            {PHASE_LABELS[phase]}
+    <Animated.View style={[styles.wrapper, { opacity: fadeAnim }]}>
+      {/* Status header */}
+      <View style={[styles.statusBar, { backgroundColor: cardBg, borderColor: borderColor as string }]}>
+        <View style={styles.statusLeft}>
+          <MaterialIcons
+            name={config.icon as any}
+            size={20}
+            color={isSuccess ? (successColor as string) : (primaryColor as string)}
+          />
+          <Text style={[
+            styles.statusLabel,
+            { color: isSuccess ? successColor : textColor },
+          ]}>
+            {config.label}
           </Text>
         </View>
-      )}
-      {isLoading && (
-        <View style={[styles.progressBar, { backgroundColor: progressTrack }]}>
-          <View style={[styles.progressFill, { width: getProgress(phase), backgroundColor: progressFill }]} />
+        {!isSuccess && (
+          <Text style={[styles.stepLabel, { color: subtextColor }]}>
+            Step {currentStep}/{totalSteps}
+          </Text>
+        )}
+      </View>
+
+      {/* Progress dots */}
+      {!isSuccess && (
+        <View style={styles.progressDots}>
+          {Array.from({ length: totalSteps }).map((_, i) => (
+            <View
+              key={i}
+              style={[
+                styles.dot,
+                {
+                  backgroundColor:
+                    i < currentStep
+                      ? (primaryColor as string)
+                      : (progressTrack as string),
+                },
+              ]}
+            />
+          ))}
         </View>
       )}
-    </View>
+
+      {/* Skeleton recipe card */}
+      {!isSuccess && (
+        <View style={[styles.skeletonCard, { backgroundColor: cardBg, borderColor: borderColor as string }]}>
+          {/* Thumbnail skeleton */}
+          <ShimmerBlock width="100%" height={160} shimmerAnim={shimmerAnim} style={{ borderRadius: radius.md }} />
+
+          {/* Content skeleton */}
+          <View style={styles.skeletonContent}>
+            {/* Title */}
+            <ShimmerBlock width="75%" height={20} shimmerAnim={shimmerAnim} />
+            <ShimmerBlock width="50%" height={14} shimmerAnim={shimmerAnim} style={{ marginTop: 8 }} />
+
+            {/* Meta row */}
+            <View style={styles.skeletonMetaRow}>
+              <ShimmerBlock width={70} height={28} shimmerAnim={shimmerAnim} style={{ borderRadius: radius.full }} />
+              <ShimmerBlock width={70} height={28} shimmerAnim={shimmerAnim} style={{ borderRadius: radius.full }} />
+              <ShimmerBlock width={70} height={28} shimmerAnim={shimmerAnim} style={{ borderRadius: radius.full }} />
+            </View>
+
+            {/* Ingredient lines */}
+            <View style={styles.skeletonLines}>
+              <ShimmerBlock width="90%" height={12} shimmerAnim={shimmerAnim} />
+              <ShimmerBlock width="70%" height={12} shimmerAnim={shimmerAnim} />
+              <ShimmerBlock width="80%" height={12} shimmerAnim={shimmerAnim} />
+              <ShimmerBlock width="60%" height={12} shimmerAnim={shimmerAnim} />
+            </View>
+          </View>
+        </View>
+      )}
+    </Animated.View>
   );
 }
 
-function getProgress(phase: ExtractionPhase): `${number}%` {
-  switch (phase) {
-    case 'fetching': return '20%';
-    case 'fetching-transcript': return '40%';
-    case 'reading': return '60%';
-    case 'extracting': return '80%';
-    case 'success': return '100%';
-    default: return '0%';
-  }
-}
-
 const styles = StyleSheet.create({
-  card: {
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    marginVertical: spacing.sm,
-    borderWidth: 1,
+  wrapper: {
+    paddingHorizontal: spacing.lg,
+    gap: spacing.md,
+    marginBottom: spacing.md,
   },
-  row: {
+  statusBar: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.lg,
+    borderWidth: 1,
   },
-  spinner: {
-    marginRight: spacing.sm,
+  statusLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
   },
-  checkmark: {
-    fontSize: typography.size['2xl'],
-    marginRight: spacing.sm,
-  },
-  label: {
+  statusLabel: {
     fontSize: typography.size.xl,
+    fontWeight: typography.weight.semibold,
+  },
+  stepLabel: {
+    fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
   },
-  errorText: {
-    fontSize: typography.size.base,
+  progressDots: {
+    flexDirection: 'row',
+    gap: spacing.sm,
   },
-  progressBar: {
+  dot: {
+    flex: 1,
     height: 4,
     borderRadius: 2,
-    marginTop: spacing.md,
-    overflow: 'hidden',
   },
-  progressFill: {
-    height: '100%',
-    borderRadius: 2,
+  skeletonCard: {
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    overflow: 'hidden',
+    ...shadows.sm,
+  },
+  skeletonContent: {
+    padding: spacing.lg,
+    gap: spacing.xs,
+  },
+  skeletonMetaRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.md,
+  },
+  skeletonLines: {
+    marginTop: spacing.lg,
+    gap: spacing.md,
+  },
+  errorCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+  },
+  errorText: {
+    flex: 1,
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.medium,
   },
 });
