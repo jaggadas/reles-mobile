@@ -3,17 +3,18 @@ import {
   FREE_WEEKLY_LIMIT,
   PRO_WEEKLY_LIMIT,
   TRIAL_RECIPE_LIMIT,
-  canExtractRecipe,
-  getRemainingExtractions,
-  incrementWeeklyExtraction,
-  resetWeeklyExtractions,
-  checkTrialActive,
-  getTrialRemainingRecipes,
-  incrementTrialExtraction,
-  startTrial,
   hasSeenTrialWelcome,
   markTrialWelcomeSeen,
+  getLocalDataForMigration,
+  markMigrationDone,
+  clearLegacySubscriptionData,
 } from "@/lib/subscription";
+import {
+  fetchSubscriptionStatus,
+  apiActivateTrial,
+  apiUseExtraction,
+  apiMigrateSubscriptionData,
+} from "@/lib/api";
 import React, {
   createContext,
   useCallback,
@@ -108,28 +109,43 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     };
   }, [initialized]);
 
+  // ── Migrate legacy AsyncStorage data to server (runs once) ──
+  useEffect(() => {
+    if (!initialized) return;
+
+    const migrate = async () => {
+      try {
+        const localData = await getLocalDataForMigration();
+        if (!localData) return; // Already migrated or no data
+        await apiMigrateSubscriptionData(localData);
+        await markMigrationDone();
+        await clearLegacySubscriptionData();
+      } catch {
+        // Will retry next app launch
+      }
+    };
+
+    migrate();
+  }, [initialized]);
+
   const updateFromCustomerInfo = useCallback(async (info: CustomerInfo) => {
     const proActive =
       typeof info.entitlements.active[ENTITLEMENT_ID] !== "undefined";
     setIsPro(proActive);
 
-    if (proActive) {
-      // Paid pro user - use weekly pro limits
-      const remaining = await getRemainingExtractions(true);
-      setRemainingExtractions(remaining);
-      setIsTrialOn(false);
-    } else {
-      // Check if trial is active
-      const trialActive = await checkTrialActive();
-      setIsTrialOn(trialActive);
+    try {
+      const status = await fetchSubscriptionStatus();
+      setIsTrialOn(status.trialActive);
 
-      if (trialActive) {
-        const remaining = await getTrialRemainingRecipes();
-        setRemainingExtractions(remaining);
+      if (proActive) {
+        setRemainingExtractions(status.proWeeklyRemaining);
+      } else if (status.trialActive) {
+        setRemainingExtractions(status.trialRemaining);
       } else {
-        const remaining = await getRemainingExtractions(false);
-        setRemainingExtractions(remaining);
+        setRemainingExtractions(status.weeklyRemaining);
       }
+    } catch {
+      // Offline fallback: keep current state
     }
   }, []);
 
@@ -153,7 +169,6 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
   const handlePaywallPurchased = useCallback(async () => {
     setPaywallVisible(false);
-    await resetWeeklyExtractions();
     await refresh();
     if (paywallResolverRef.current) {
       paywallResolverRef.current(true);
@@ -173,55 +188,35 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
   const tryExtract = useCallback(async (): Promise<boolean> => {
     // Always fetch fresh pro status from RevenueCat to avoid stale closure issues
-    // (e.g. right after a purchase, React state isPro may not have updated yet)
     let proActive = false;
     try {
       const info = await Purchases.getCustomerInfo();
       proActive = typeof info.entitlements.active[ENTITLEMENT_ID] !== "undefined";
     } catch {}
 
-    if (proActive) {
-      // Paid pro user - use weekly pro limits
-      const allowed = await canExtractRecipe(true);
-      if (!allowed) return false;
-      await incrementWeeklyExtraction();
-      const remaining = await getRemainingExtractions(true);
-      setRemainingExtractions(remaining);
-      setIsPro(true);
-      return true;
+    try {
+      const result = await apiUseExtraction(proActive);
+      setRemainingExtractions(result.remaining);
+      setIsTrialOn(result.trialActive);
+      setIsPro(proActive);
+      return result.allowed;
+    } catch {
+      // Network failure — deny extraction (extraction itself requires network anyway)
+      return false;
     }
-
-    // Check if trial is active
-    const trialActive = await checkTrialActive();
-
-    if (trialActive) {
-      // Trial user - use trial limits
-      await incrementTrialExtraction();
-      const remaining = await getTrialRemainingRecipes();
-      setRemainingExtractions(remaining);
-
-      // Check if trial just expired (used last recipe)
-      const stillActive = await checkTrialActive();
-      setIsTrialOn(stillActive);
-
-      return true;
-    }
-
-    // Free user (trial expired or never started) - use free weekly limits
-    const allowed = await canExtractRecipe(false);
-    if (!allowed) return false;
-    await incrementWeeklyExtraction();
-    const remaining = await getRemainingExtractions(false);
-    setRemainingExtractions(remaining);
-    return true;
   }, []);
 
   const activateTrial = useCallback(async () => {
-    await startTrial();
-    setIsTrialOn(true);
-    const remaining = await getTrialRemainingRecipes();
-    setRemainingExtractions(remaining);
-    setShouldShowTrialWelcome(true);
+    try {
+      const result = await apiActivateTrial();
+      if (!result.alreadyActive) {
+        setShouldShowTrialWelcome(true);
+      }
+      setIsTrialOn(result.trialActive ?? true);
+      setRemainingExtractions(result.trialRemaining ?? TRIAL_RECIPE_LIMIT);
+    } catch {
+      // Silently fail — will retry on next login
+    }
   }, []);
 
   const dismissTrialWelcome = useCallback(async () => {
@@ -233,9 +228,15 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     const checkWelcome = async () => {
       const seen = await hasSeenTrialWelcome();
-      const trialActive = await checkTrialActive();
-      if (!seen && trialActive) {
-        setShouldShowTrialWelcome(true);
+      if (!seen) {
+        try {
+          const status = await fetchSubscriptionStatus();
+          if (status.trialActive) {
+            setShouldShowTrialWelcome(true);
+          }
+        } catch {
+          // Offline — skip welcome check
+        }
       }
     };
     checkWelcome();

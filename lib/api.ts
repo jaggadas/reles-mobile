@@ -181,6 +181,68 @@ export async function createInstacartGroceryLink(
   return data.url;
 }
 
+// ── Subscription API ──────────────────────────────────────────
+
+export interface SubscriptionStatus {
+  trial: { startDate: string; recipesUsed: number } | null;
+  weeklyExtractions: { count: number; weekStart: string };
+  trialActive: boolean;
+  trialRemaining: number;
+  weeklyRemaining: number;
+  proWeeklyRemaining: number;
+}
+
+export async function fetchSubscriptionStatus(): Promise<SubscriptionStatus> {
+  const response = await authFetch(`${API_BASE_URL}/api/subscription/status`);
+  if (!response.ok) throw new Error("Failed to fetch subscription status");
+  return response.json();
+}
+
+export async function apiActivateTrial(): Promise<{
+  alreadyActive: boolean;
+  trial?: { startDate: string; recipesUsed: number };
+  trialActive?: boolean;
+  trialRemaining?: number;
+}> {
+  const response = await authFetch(`${API_BASE_URL}/api/subscription/activate-trial`, {
+    method: "POST",
+  });
+  if (!response.ok) throw new Error("Failed to activate trial");
+  return response.json();
+}
+
+export interface UseExtractionResult {
+  allowed: boolean;
+  remaining: number;
+  trialActive: boolean;
+  weeklyCount: number;
+}
+
+export async function apiUseExtraction(isPro: boolean): Promise<UseExtractionResult> {
+  const response = await authFetch(`${API_BASE_URL}/api/subscription/use-extraction`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ isPro }),
+  });
+  if (!response.ok) throw new Error("Failed to record extraction");
+  return response.json();
+}
+
+export async function apiMigrateSubscriptionData(data: {
+  trial: { startDate: string; recipesUsed: number } | null;
+  weeklyExtractions: { count: number; weekStart: string };
+}): Promise<{ migrated: boolean; reason?: string }> {
+  const response = await authFetch(`${API_BASE_URL}/api/subscription/migrate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error("Failed to migrate subscription data");
+  return response.json();
+}
+
+// ── Popular Recipes ───────────────────────────────────────────
+
 export interface PopularRecipe {
   videoId: string;
   title: string;
