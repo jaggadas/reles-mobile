@@ -18,7 +18,22 @@ import { ExtractionCard } from '@/components/ExtractionCard';
 import { VideoSearchResults } from '@/components/VideoSearchResults';
 import { EXPLORE_CATEGORIES } from '@/constants/explore-categories';
 import { formatCuisine } from '@/lib/format';
-import { useRecipeSearch } from '@/hooks/useRecipeSearch';
+import { useRecipeSearch, type DietFilter } from '@/hooks/useRecipeSearch';
+
+// ── Diet filter config ────────────────────────────────────────────
+
+const DIET_FILTERS: {
+  value: DietFilter;
+  label: string;
+  icon: React.ComponentProps<typeof MaterialIcons>['name'];
+  activeBg: string;
+  activeBorder: string;
+  activeColor: string;
+}[] = [
+  { value: 'veg',    label: 'Veg',     icon: 'eco',        activeBg: '#E8F5E9', activeBorder: '#A5D6A7', activeColor: '#2E7D32' },
+  { value: 'nonveg', label: 'Non-Veg', icon: 'restaurant', activeBg: '#FBE9E7', activeBorder: '#FFAB91', activeColor: '#BF360C' },
+  { value: 'vegan',  label: 'Vegan',   icon: 'spa',        activeBg: '#E0F2F1', activeBorder: '#80CBC4', activeColor: '#00695C' },
+];
 
 // ── Component ────────────────────────────────────────────────────
 
@@ -32,8 +47,8 @@ export default function HomeScreen() {
     error,
     setError,
     isSearching,
-    vegOnly,
-    setVegOnly,
+    dietFilter,
+    setDietFilter,
     inputRef,
     greetingData,
     trendingSearches,
@@ -106,24 +121,26 @@ export default function HomeScreen() {
           <MaterialIcons name="arrow-forward" size={20} color={primaryTextColor as string} />
         </Pressable>
       </View>
-      <View style={styles.vegToggleRow}>
-        <Pressable
-          onPress={() => setVegOnly((prev) => !prev)}
-          style={({ pressed }) => [
-            styles.vegToggle,
-            {
-              backgroundColor: pressed || vegOnly ? (primaryLightColor as string) : 'transparent',
-              borderColor: vegOnly ? (primaryColor as string) : (borderColor as string),
-            },
-          ]}
-        >
-          <MaterialIcons
-            name={vegOnly ? 'check-box' : 'check-box-outline-blank'}
-            size={16}
-            color={vegOnly ? (primaryColor as string) : (subtextColor as string)}
-          />
-          <Text style={[styles.vegToggleLabel, { color: subtextColor }]}>Veg mode</Text>
-        </Pressable>
+      {/* Diet filter */}
+      <View style={styles.dietFilterRow}>
+        {DIET_FILTERS.map((f) => {
+          const active = dietFilter === f.value;
+          return (
+            <Pressable
+              key={f.value}
+              onPress={() => setDietFilter(active ? 'all' : f.value)}
+              style={[
+                styles.dietFilterButton,
+                { backgroundColor: active ? f.activeBg : colors.categoryBg, borderColor: active ? f.activeBorder : colors.borderLight },
+              ]}
+            >
+              <MaterialIcons name={f.icon} size={14} color={active ? f.activeColor : (subtextColor as string)} />
+              <Text style={[styles.dietFilterLabel, { color: active ? f.activeColor : subtextColor }]}>
+                {f.label}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
 
       {/* Trending searches (only when idle) */}
@@ -449,23 +466,25 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
     paddingBottom: spacing.sm,
   },
-  vegToggleRow: {
+  dietFilterRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.sm,
   },
-  vegToggle: {
-    alignSelf: 'flex-start',
+  dietFilterButton: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: spacing.xs,
+    paddingVertical: spacing.sm,
     borderRadius: radius.full,
     borderWidth: 1,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
   },
-  vegToggleLabel: {
+  dietFilterLabel: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.medium,
+    fontWeight: typography.weight.semibold,
   },
   inputWrapper: {
     flex: 1,

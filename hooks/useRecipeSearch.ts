@@ -19,6 +19,10 @@ import {
 } from '@/lib/api';
 import { insertRecipe, findRecipeByVideoId, getAllRecipes } from '@/lib/storage';
 
+// ── Types ────────────────────────────────────────────────────────
+
+export type DietFilter = 'all' | 'veg' | 'nonveg' | 'vegan';
+
 // ── Helpers ──────────────────────────────────────────────────────
 
 function getGreeting(name: string): { greeting: string; subtitle: string } {
@@ -48,8 +52,8 @@ export interface UseRecipeSearchReturn {
   error: string | null;
   setError: React.Dispatch<React.SetStateAction<string | null>>;
   isSearching: boolean;
-  vegOnly: boolean;
-  setVegOnly: React.Dispatch<React.SetStateAction<boolean>>;
+  dietFilter: DietFilter;
+  setDietFilter: React.Dispatch<React.SetStateAction<DietFilter>>;
   inputRef: React.RefObject<TextInput>;
 
   // Computed / memoized data
@@ -93,7 +97,7 @@ export function useRecipeSearch(): UseRecipeSearchReturn {
   const inputRef = useRef<TextInput>(null);
   const lastSearchParam = useRef<string | null>(null);
   const lastUrlParam = useRef<string | null>(null);
-  const [vegOnly, setVegOnly] = useState(false);
+  const [dietFilter, setDietFilter] = useState<DietFilter>('all');
 
   // Memoized data
   const [trendingSearches] = useState<TrendingSearch[]>(() => getRandomTrending(6));
@@ -153,7 +157,11 @@ export function useRecipeSearch(): UseRecipeSearchReturn {
 
     setIsSearching(true);
     try {
-      const effectiveQuery = vegOnly ? `${trimmed} veg recipe` : trimmed;
+      const dietSuffix =
+        dietFilter === 'veg' ? ' vegetarian recipe' :
+        dietFilter === 'vegan' ? ' vegan recipe' :
+        dietFilter === 'nonveg' ? ' non-veg recipe' : '';
+      const effectiveQuery = trimmed + dietSuffix;
       const results = await searchRecipeVideos(effectiveQuery);
       setSearchResults(results);
       if (results.length === 0) {
@@ -164,7 +172,7 @@ export function useRecipeSearch(): UseRecipeSearchReturn {
     } finally {
       setIsSearching(false);
     }
-  }, [query, vegOnly]);
+  }, [query, dietFilter]);
 
   const handleExtract = useCallback(async (videoId: string) => {
     setError(null);
@@ -242,8 +250,8 @@ export function useRecipeSearch(): UseRecipeSearchReturn {
     error,
     setError,
     isSearching,
-    vegOnly,
-    setVegOnly,
+    dietFilter,
+    setDietFilter,
     inputRef,
 
     // Computed / memoized data
