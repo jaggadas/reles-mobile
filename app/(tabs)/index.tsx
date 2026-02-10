@@ -326,12 +326,12 @@ export default function HomeScreen() {
                     {
                       backgroundColor: categoryBg as string,
                       borderColor: borderColor as string,
-                      transform: [{ scale: pressed ? 0.96 : 1 }],
+                      opacity: pressed ? 0.7 : 1,
                     },
                   ]}
                 >
                   <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
-                  <Text style={[styles.categoryLabel, { color: textColor }]}>
+                  <Text style={[styles.categoryLabel, { color: textColor }]} numberOfLines={1}>
                     {cat.label}
                   </Text>
                 </Pressable>
@@ -644,24 +644,24 @@ const styles = StyleSheet.create({
   categoryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   categoryCard: {
-    width: '47%',
-    flexDirection: 'row',
+    width: '23%',
     alignItems: 'center',
-    gap: spacing.md,
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.lg,
-    borderRadius: radius.lg,
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    borderRadius: radius.md,
     borderWidth: 1,
+    gap: spacing.xs,
   },
   categoryEmoji: {
-    fontSize: 28,
+    fontSize: 22,
   },
   categoryLabel: {
-    fontSize: typography.size.xl,
+    fontSize: typography.size.xs,
     fontWeight: typography.weight.semibold,
+    textAlign: 'center',
   },
 
   // Seasonal picks
