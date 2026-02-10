@@ -4,6 +4,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import type { TextInput } from 'react-native';
 
 import { useAuth } from '@/contexts/AuthContext';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import { getRandomTrending, type TrendingSearch } from '@/constants/trending';
 import { getSuggestionsForCuisines, type DishSuggestion } from '@/constants/suggestions';
 import { getCurrentSeason, type SeasonConfig } from '@/constants/seasonal';
@@ -85,6 +86,7 @@ export interface UseRecipeSearchReturn {
 export function useRecipeSearch(): UseRecipeSearchReturn {
   const router = useRouter();
   const { user } = useAuth();
+  const { tryExtract, showPaywall, weeklyLimit, isPro } = useSubscription();
   const params = useLocalSearchParams<{ search?: string; url?: string }>();
 
   const [query, setQuery] = useState('');
@@ -184,6 +186,23 @@ export function useRecipeSearch(): UseRecipeSearchReturn {
       return;
     }
 
+    // Check extraction limit
+    const allowed = await tryExtract();
+    if (!allowed) {
+      const purchased = await showPaywall();
+      if (!purchased) {
+        setError(
+          `You've reached your weekly limit of ${weeklyLimit} recipes. Upgrade to Pro for ${isPro ? 'more' : '10'} recipes per week.`
+        );
+        return;
+      }
+      const retryAllowed = await tryExtract();
+      if (!retryAllowed) {
+        setError('You\'ve reached your weekly recipe limit. Please try again next week.');
+        return;
+      }
+    }
+
     try {
       setPhase('fetching');
       const details = await fetchVideoDetails(videoId);
@@ -223,7 +242,7 @@ export function useRecipeSearch(): UseRecipeSearchReturn {
       setPhase('idle');
       setError(err instanceof Error ? err.message : 'Extraction failed');
     }
-  }, [router]);
+  }, [router, tryExtract, showPaywall, weeklyLimit, isPro]);
 
   const handleSelectVideo = useCallback((result: VideoSearchResult) => {
     handleExtract(result.videoId);

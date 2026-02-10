@@ -1,24 +1,25 @@
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  Pressable,
   ActivityIndicator,
   FlatList,
   Image,
+  Pressable,
   ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
-import { colors, spacing, radius, typography } from '@/constants/colors';
 import { ExtractionCard } from '@/components/ExtractionCard';
 import { VideoSearchResults } from '@/components/VideoSearchResults';
+import { colors, radius, spacing, typography } from '@/constants/colors';
 import { EXPLORE_CATEGORIES } from '@/constants/explore-categories';
-import { formatCuisine } from '@/lib/format';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useRecipeSearch, type DietFilter } from '@/hooks/useRecipeSearch';
+import { formatCuisine } from '@/lib/format';
 
 // ── Diet filter config ────────────────────────────────────────────
 
@@ -65,6 +66,8 @@ export default function HomeScreen() {
     router,
     getThumbnailUrl,
   } = useRecipeSearch();
+
+  const { remainingExtractions, weeklyLimit, isPro, isTrialActive, showPaywall } = useSubscription();
 
   // ── Colors ──
   const bgColor = colors.background;
@@ -142,6 +145,24 @@ export default function HomeScreen() {
             </Pressable>
           );
         })}
+      </View>
+
+      {/* Extraction quota indicator */}
+      <View style={styles.quotaContainer}>
+        <MaterialIcons
+          name={(isPro || isTrialActive) ? 'workspace-premium' : 'info-outline'}
+          size={14}
+          color={(isPro || isTrialActive) ? (primaryColor as string) : (subtextColor as string)}
+        />
+        <Text style={[styles.quotaText, { color: subtextColor }]}>
+          {remainingExtractions} of {weeklyLimit} recipes left
+          {isTrialActive ? ' \u00B7 Trial' : isPro ? ' \u00B7 Pro' : ' this week \u00B7 Free plan'}
+        </Text>
+        {!isPro && !isTrialActive && (
+          <Pressable onPress={() => showPaywall()}>
+            <Text style={[styles.upgradeLink, { color: primaryColor }]}>Upgrade</Text>
+          </Pressable>
+        )}
       </View>
 
       {/* Trending searches (only when idle) */}
@@ -512,6 +533,23 @@ const styles = StyleSheet.create({
     width: 48,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+
+  // Quota
+  quotaContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xs,
+  },
+  quotaText: {
+    fontSize: typography.size.sm,
+    flex: 1,
+  },
+  upgradeLink: {
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.semibold,
   },
 
   // Trending

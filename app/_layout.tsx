@@ -9,6 +9,7 @@ import { ShareIntentProvider, useShareIntentContext } from 'expo-share-intent';
 
 import { colors, typography } from '@/constants/colors';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { SubscriptionProvider, useSubscription } from '@/contexts/SubscriptionContext';
 import { extractVideoId } from '@/lib/api';
 
 const RelesLightTheme: Theme = {
@@ -43,6 +44,20 @@ function RootNavigator() {
       router.replace('/(tabs)');
     }
   }, [status, isLoading, segments]);
+
+  // Activate trial and show welcome screen for new users
+  const { shouldShowTrialWelcome, activateTrial, isPro } = useSubscription();
+  useEffect(() => {
+    if (status === 'logged_in' && !isPro) {
+      activateTrial();
+    }
+  }, [status]);
+
+  useEffect(() => {
+    if (shouldShowTrialWelcome && status === 'logged_in') {
+      router.push('/trial-welcome' as any);
+    }
+  }, [shouldShowTrialWelcome, status]);
 
   // Handle YouTube share intent
   useEffect(() => {
@@ -81,6 +96,10 @@ function RootNavigator() {
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen
+          name="trial-welcome"
+          options={{ headerShown: false, gestureEnabled: false }}
+        />
+        <Stack.Screen
           name="recipe/[id]"
           options={{
             title: 'Recipe',
@@ -111,9 +130,11 @@ export default function RootLayout() {
   return (
     <ShareIntentProvider>
       <AuthProvider>
-        <ThemeProvider value={RelesLightTheme}>
-          <RootNavigator />
-        </ThemeProvider>
+        <SubscriptionProvider>
+          <ThemeProvider value={RelesLightTheme}>
+            <RootNavigator />
+          </ThemeProvider>
+        </SubscriptionProvider>
       </AuthProvider>
     </ShareIntentProvider>
   );
