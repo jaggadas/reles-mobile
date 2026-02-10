@@ -147,20 +147,27 @@ export default function HomeScreen() {
         })}
       </View>
 
-      {/* Extraction quota indicator */}
-      <View style={styles.quotaContainer}>
-        <MaterialIcons
-          name={(isPro || isTrialActive) ? 'workspace-premium' : 'info-outline'}
-          size={14}
-          color={(isPro || isTrialActive) ? (primaryColor as string) : (subtextColor as string)}
-        />
-        <Text style={[styles.quotaText, { color: subtextColor }]}>
-          {remainingExtractions} of {weeklyLimit} recipes left
-          {isTrialActive ? ' \u00B7 Trial' : isPro ? ' \u00B7 Pro' : ' this week \u00B7 Free plan'}
-        </Text>
-        {!isPro && !isTrialActive && (
-          <Pressable onPress={() => showPaywall()}>
-            <Text style={[styles.upgradeLink, { color: primaryColor }]}>Upgrade</Text>
+      {/* Extraction quota banner */}
+      <View style={[styles.quotaBanner, !isPro && styles.quotaBannerFree]}>
+        <View style={styles.quotaLeft}>
+          <View style={styles.quotaCountRow}>
+            <Text style={styles.quotaCount}>{remainingExtractions}</Text>
+            <Text style={styles.quotaOf}>/{weeklyLimit}</Text>
+          </View>
+          <Text style={[styles.quotaLabel, { color: subtextColor }]}>
+            {isPro ? 'recipes left · Pro' : isTrialActive ? 'recipes left · Trial' : 'recipes left this week'}
+          </Text>
+        </View>
+        {!isPro && (
+          <Pressable
+            onPress={() => showPaywall()}
+            style={({ pressed }) => [
+              styles.quotaUpgradeButton,
+              { opacity: pressed ? 0.85 : 1 },
+            ]}
+          >
+            <MaterialIcons name="bolt" size={16} color="#FFFFFF" />
+            <Text style={styles.quotaUpgradeText}>Go Pro</Text>
           </Pressable>
         )}
       </View>
@@ -539,21 +546,61 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  // Quota
-  quotaContainer: {
+  // Quota banner
+  quotaBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginHorizontal: spacing.xl,
+    marginBottom: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+  },
+  quotaBannerFree: {
+    backgroundColor: '#FFFAF6',
+    borderColor: colors.primary,
+  },
+  quotaLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  quotaCountRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  quotaCount: {
+    fontFamily: f.headingBold,
+    fontSize: typography.size['2xl'],
+    color: colors.primary,
+  },
+  quotaOf: {
+    fontFamily: f.body,
+    fontSize: typography.size.base,
+    color: colors.primary,
+    opacity: 0.6,
+  },
+  quotaLabel: {
+    fontFamily: f.body,
+    fontSize: typography.size.sm,
+  },
+  quotaUpgradeButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xs,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.full,
+    backgroundColor: colors.primary,
   },
-  quotaText: {
-    fontSize: typography.size.sm,
-    flex: 1,
-  },
-  upgradeLink: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
+  quotaUpgradeText: {
+    fontFamily: f.bodySemibold,
+    fontSize: typography.size.base,
+    color: '#FFFFFF',
   },
 
   // Trending
