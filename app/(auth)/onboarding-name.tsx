@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -6,44 +6,22 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter, useLocalSearchParams } from "expo-router";
 import { OnboardingProgress } from "@/components/OnboardingProgress";
 import { Button } from "@/components/ui";
-import { useAuth } from "@/contexts/AuthContext";
+import { useOnboardingName } from "@/hooks/useOnboardingName";
 import { colors, spacing, radius, typography } from "@/constants/colors";
 
 export default function OnboardingNameScreen() {
-  const router = useRouter();
-  const params = useLocalSearchParams<{ email: string }>();
-  const { register } = useAuth();
-
-  const [name, setName] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const handleContinue = async () => {
-    if (!name.trim()) {
-      Alert.alert("Name required", "Please enter your name.");
-      return;
-    }
-    if (password.length < 6) {
-      Alert.alert("Password too short", "Password must be at least 6 characters.");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await register(params.email!, password, name.trim());
-      router.push("/(auth)/onboarding-dietary");
-    } catch (err: any) {
-      Alert.alert("Registration failed", err.message || "Something went wrong");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    name,
+    setName,
+    password,
+    setPassword,
+    loading,
+    handleContinue,
+  } = useOnboardingName();
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>

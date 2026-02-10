@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -7,34 +7,34 @@ import {
   TextInput,
   Pressable,
   Image,
-  Alert,
   Linking,
   ActivityIndicator,
 } from 'react-native';
-import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
+import { Stack } from 'expo-router';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import * as WebBrowser from 'expo-web-browser';
 
 import { colors, spacing, radius, typography } from '@/constants/colors';
 import { MetadataCard } from '@/components/MetadataCard';
 import { Button, Tag } from '@/components/ui';
-import type { Recipe, VideoSearchResult } from '@/lib/types';
 import { formatDifficulty, formatCuisine, formatAllergens } from '@/lib/format';
-import { getRecipeById, updateRecipe, deleteRecipe } from '@/lib/storage';
-import { createInstacartRecipeLink, searchRecipeVideos } from '@/lib/api';
-import { useAuth } from '@/contexts/AuthContext';
+import { useRecipeDetail } from '@/hooks/useRecipeDetail';
 
 export default function RecipeDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const router = useRouter();
-
-  const [recipe, setRecipe] = useState<Recipe | null>(null);
-  const [title, setTitle] = useState('');
-  const [instacartLoading, setInstacartLoading] = useState(false);
-  const [relatedVideos, setRelatedVideos] = useState<VideoSearchResult[]>([]);
-  const [loadingRelated, setLoadingRelated] = useState(false);
-
-  const { user } = useAuth();
+  const {
+    recipe,
+    title,
+    setTitle,
+    instacartLoading,
+    relatedVideos,
+    loadingRelated,
+    intersectingAllergens,
+    handleTitleBlur,
+    handleInstacart,
+    handleDelete,
+    handleUpdateIngredient,
+    handleUpdateInstruction,
+    router,
+  } = useRecipeDetail();
 
   const bgColor = colors.background;
   const textColor = colors.text;
@@ -49,113 +49,6 @@ export default function RecipeDetailScreen() {
   const stepCircle = colors.stepCircle;
   const errorColor = colors.deleteText;
   const textOnPrimary = colors.textOnPrimary;
-
-  const loadRecipe = useCallback(async () => {
-    if (!id) return;
-    const r = await getRecipeById(id);
-    if (r) {
-      setRecipe(r);
-      setTitle(r.title);
-    }
-  }, [id]);
-
-  useEffect(() => {
-    loadRecipe();
-  }, [loadRecipe]);
-
-  useEffect(() => {
-    if (!recipe) return;
-    const query = recipe.title || recipe.videoTitle;
-    if (!query) return;
-
-    let cancelled = false;
-    (async () => {
-      try {
-        setLoadingRelated(true);
-        const results = await searchRecipeVideos(`${query} recipe`);
-        if (cancelled) return;
-        const filtered = results.filter((v) => v.videoId !== recipe.videoId).slice(0, 4);
-        setRelatedVideos(filtered);
-      } catch {
-        if (!cancelled) setRelatedVideos([]);
-      } finally {
-        if (!cancelled) setLoadingRelated(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [recipe]);
-
-  async function handleTitleBlur() {
-    if (!recipe || title === recipe.title) return;
-    await updateRecipe(recipe.id, { title });
-    await loadRecipe();
-  }
-
-  async function handleInstacart() {
-    if (!recipe) return;
-    setInstacartLoading(true);
-    try {
-      const url = await createInstacartRecipeLink({
-        title: recipe.title,
-        ingredients: recipe.ingredients,
-        instructions: recipe.instructions,
-        servings: recipe.servings,
-        prepTimeMinutes: recipe.prepTimeMinutes,
-        cookTimeMinutes: recipe.cookTimeMinutes,
-        thumbnailUrl: recipe.thumbnail,
-        sourceUrl: recipe.url,
-      });
-      await WebBrowser.openBrowserAsync(url);
-    } catch (err) {
-      Alert.alert('Error', err instanceof Error ? err.message : 'Failed to open Instacart');
-    } finally {
-      setInstacartLoading(false);
-    }
-  }
-
-  const userAllergens = user?.preferences?.allergens ?? [];
-  const recipeAllergens = recipe?.allergens ?? [];
-  const intersectingAllergens = recipeAllergens.filter((a) =>
-    userAllergens.includes(a.toLowerCase())
-  );
-
-  function handleDelete() {
-    if (!recipe) return;
-    Alert.alert(
-      'Delete Recipe',
-      `Are you sure you want to delete "${recipe.title}"?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            await deleteRecipe(recipe.id);
-            router.back();
-          },
-        },
-      ]
-    );
-  }
-
-  async function handleUpdateIngredient(index: number, field: 'name' | 'quantity', value: string) {
-    if (!recipe) return;
-    const updated = [...recipe.ingredients];
-    updated[index] = { ...updated[index], [field]: value };
-    await updateRecipe(recipe.id, { ingredients: updated });
-    setRecipe({ ...recipe, ingredients: updated });
-  }
-
-  async function handleUpdateInstruction(index: number, value: string) {
-    if (!recipe) return;
-    const updated = [...recipe.instructions];
-    updated[index] = value;
-    await updateRecipe(recipe.id, { instructions: updated });
-    setRecipe({ ...recipe, instructions: updated });
-  }
 
   if (!recipe) {
     return (
