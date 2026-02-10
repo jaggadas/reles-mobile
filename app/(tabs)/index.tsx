@@ -209,7 +209,7 @@ export default function HomeScreen() {
       {/* Idle state: all sections */}
       {showIdle && (
         <ScrollView
-          style={styles.scrollContent}
+          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
@@ -272,6 +272,7 @@ export default function HomeScreen() {
                 nestedScrollEnabled
                 showsHorizontalScrollIndicator={false}
                 keyExtractor={(item) => item.id}
+                style={styles.horizontalScroll}
                 contentContainerStyle={styles.horizontalList}
                 renderItem={({ item }) => (
                   <Pressable
@@ -309,6 +310,7 @@ export default function HomeScreen() {
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
+                style={styles.horizontalScroll}
                 contentContainerStyle={styles.horizontalList}
               >
                 {forYouSuggestions.map((item) => (
@@ -377,6 +379,7 @@ export default function HomeScreen() {
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
+              style={styles.horizontalScroll}
               contentContainerStyle={styles.horizontalList}
             >
               {season.items.map((item) => (
@@ -417,6 +420,7 @@ export default function HomeScreen() {
                 nestedScrollEnabled
                 showsHorizontalScrollIndicator={false}
                 keyExtractor={(item) => item.videoId}
+                style={styles.horizontalScroll}
                 contentContainerStyle={styles.horizontalList}
                 renderItem={({ item }) => (
                   <Pressable
@@ -585,7 +589,7 @@ const styles = StyleSheet.create({
 
   // Scroll
   scrollContent: {
-    flex: 1,
+    flexGrow: 1,
   },
 
   // Sections
@@ -737,8 +741,12 @@ const styles = StyleSheet.create({
   },
 
   // Horizontal lists
+  horizontalScroll: {
+    marginHorizontal: -spacing.xl,
+  },
   horizontalList: {
     gap: spacing.md,
+    paddingHorizontal: spacing.xl,
   },
 
   // Popular recipes
