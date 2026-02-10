@@ -88,6 +88,8 @@ export default function OnboardingNameScreen() {
   );
 }
 
+const f = typography.family;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -109,12 +111,14 @@ const styles = StyleSheet.create({
   },
   heading: {
     fontSize: typography.size["5xl"],
+    fontFamily: f.headingBold,
     fontWeight: typography.weight.bold,
     textAlign: "center",
     letterSpacing: -0.5,
   },
   subheading: {
     fontSize: typography.size.xl,
+    fontFamily: f.body,
     textAlign: "center",
     marginTop: spacing.sm,
     marginBottom: spacing["2xl"],
@@ -132,9 +136,11 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: spacing.lg,
     fontSize: typography.size.xl,
+    fontFamily: f.body,
   },
   hint: {
     fontSize: typography.size.sm,
+    fontFamily: f.body,
     marginLeft: spacing.xs,
   },
   footer: {

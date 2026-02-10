@@ -98,6 +98,8 @@ export default function LoginScreen() {
   );
 }
 
+const f = typography.family;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -117,6 +119,7 @@ const styles = StyleSheet.create({
   },
   tagline: {
     fontSize: typography.size.lg,
+    fontFamily: f.body,
     textAlign: "center",
     fontStyle: "italic",
     marginBottom: spacing.xs,
@@ -132,6 +135,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: spacing.lg,
     fontSize: typography.size.xl,
+    fontFamily: f.body,
   },
   passwordAnimated: {
     overflow: "hidden",

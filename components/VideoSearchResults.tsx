@@ -56,6 +56,8 @@ export function VideoSearchResults({ results, onSelect }: Props) {
   );
 }
 
+const f = typography.family;
+
 const styles = StyleSheet.create({
   list: {
     flex: 1,
@@ -78,13 +80,16 @@ const styles = StyleSheet.create({
   title: {
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
+    fontFamily: f.bodySemibold,
     marginBottom: spacing.xs,
   },
   channel: {
     fontSize: typography.size.sm,
+    fontFamily: f.body,
   },
   views: {
     fontSize: typography.size.xs,
+    fontFamily: f.body,
     marginTop: spacing.xs / 2,
   },
 });

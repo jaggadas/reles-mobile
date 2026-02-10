@@ -135,6 +135,8 @@ export default function OnboardingDietaryScreen() {
   );
 }
 
+const f = typography.family;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -154,16 +156,19 @@ const styles = StyleSheet.create({
   },
   heading: {
     fontSize: typography.size["5xl"],
+    fontFamily: f.headingBold,
     fontWeight: typography.weight.bold,
     letterSpacing: -0.5,
   },
   subheading: {
     fontSize: typography.size.xl,
+    fontFamily: f.body,
     marginTop: spacing.xs,
     marginBottom: spacing["2xl"],
   },
   sectionLabel: {
     fontSize: typography.size["2xl"],
+    fontFamily: f.headingBold,
     fontWeight: typography.weight.semibold,
     marginBottom: spacing.md,
     marginTop: spacing.lg,
@@ -187,6 +192,7 @@ const styles = StyleSheet.create({
   },
   dietLabel: {
     fontSize: typography.size.lg,
+    fontFamily: f.bodySemibold,
     fontWeight: typography.weight.semibold,
   },
   chipGrid: {
@@ -209,6 +215,7 @@ const styles = StyleSheet.create({
   },
   chipLabel: {
     fontSize: typography.size.lg,
+    fontFamily: f.bodyMedium,
     fontWeight: typography.weight.medium,
   },
   footer: {

@@ -77,6 +77,8 @@ export function FeatureCarousel() {
   );
 }
 
+const f = typography.family;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -98,12 +100,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: typography.size["5xl"],
     fontWeight: typography.weight.bold,
+    fontFamily: f.headingBold,
     textAlign: "center",
     marginBottom: spacing.sm,
     letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: typography.size.xl,
+    fontFamily: f.body,
     textAlign: "center",
     lineHeight: 24,
     paddingHorizontal: spacing.lg,

@@ -3,10 +3,11 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
+import { useFonts } from 'expo-font';
 import 'react-native-reanimated';
 import { ShareIntentProvider, useShareIntentContext } from 'expo-share-intent';
 
-import { colors } from '@/constants/colors';
+import { colors, typography } from '@/constants/colors';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { extractVideoId } from '@/lib/api';
 
@@ -67,7 +68,16 @@ function RootNavigator() {
 
   return (
     <>
-      <Stack>
+      <Stack
+        screenOptions={{
+          headerTitleStyle: {
+            fontFamily: typography.family.headingBold,
+          },
+          headerBackTitleStyle: {
+            fontFamily: typography.family.body,
+          },
+        }}
+      >
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen
@@ -85,6 +95,19 @@ function RootNavigator() {
 }
 
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    'Typewriter': require('../assets/fonts/AmericanTypewriter-01.ttf'),
+    'Napzer': require('../assets/fonts/Napzer-Regular.ttf'),
+  });
+
+  if (!fontsLoaded) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
   return (
     <ShareIntentProvider>
       <AuthProvider>

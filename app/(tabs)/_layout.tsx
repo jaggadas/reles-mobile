@@ -2,9 +2,10 @@ import { Tabs, useRouter } from 'expo-router';
 import React from 'react';
 import { Platform, Pressable, Alert } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { Image } from 'expo-image';
 
 import { HapticTab } from '@/components/haptic-tab';
-import { colors } from '@/constants/colors';
+import { colors, typography } from '@/constants/colors';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function TabLayout() {
@@ -40,6 +41,13 @@ export default function TabLayout() {
           backgroundColor: colors.surface,
         },
         headerTintColor: colors.text,
+        headerTitleStyle: {
+          fontFamily: typography.family.headingBold,
+        },
+        tabBarLabelStyle: {
+          fontFamily: typography.family.bodySemibold,
+          fontSize: typography.size.xs,
+        },
         headerShown: true,
         tabBarButton: HapticTab,
         headerRight: () => (
@@ -51,7 +59,14 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Reles Logo',
+          title: 'Home',
+          headerTitle: () => (
+            <Image
+              source={require('@/assets/images/Reles.svg')}
+              style={{ width: 80, height: 28 }}
+              contentFit="contain"
+            />
+          ),
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="search" size={size} color={color} />
           ),

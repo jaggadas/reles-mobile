@@ -28,6 +28,8 @@ export function Tag({ label, variant = 'filled' }: TagProps) {
   );
 }
 
+const f = typography.family;
+
 const styles = StyleSheet.create({
   tag: {
     paddingHorizontal: spacing.md,
@@ -37,5 +39,6 @@ const styles = StyleSheet.create({
   text: {
     fontSize: typography.size.md,
     fontWeight: typography.weight.medium,
+    fontFamily: f.bodyMedium,
   },
 });

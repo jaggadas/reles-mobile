@@ -30,6 +30,8 @@ export function EmptyState({ icon, title, subtitle, children }: EmptyStateProps)
   );
 }
 
+const f = typography.family;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -41,10 +43,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: typography.size['3xl'],
     fontWeight: typography.weight.bold,
+    fontFamily: f.headingBold,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: typography.size.base,
+    fontFamily: f.body,
     textAlign: 'center',
     lineHeight: 20,
   },

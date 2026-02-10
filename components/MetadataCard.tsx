@@ -48,6 +48,8 @@ export function MetadataCard({ servings, prepTimeMinutes, cookTimeMinutes, calor
   );
 }
 
+const f = typography.family;
+
 const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
@@ -64,8 +66,10 @@ const styles = StyleSheet.create({
   value: {
     fontSize: typography.size.lg,
     fontWeight: typography.weight.semibold,
+    fontFamily: f.bodySemibold,
   },
   label: {
     fontSize: typography.size.xs,
+    fontFamily: f.body,
   },
 });

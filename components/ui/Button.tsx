@@ -99,6 +99,8 @@ export function Button({
   );
 }
 
+const f = typography.family;
+
 const styles = StyleSheet.create({
   base: {
     flexDirection: 'row',
@@ -120,10 +122,12 @@ const styles = StyleSheet.create({
   text: {
     fontSize: typography.size.lg,
     fontWeight: typography.weight.semibold,
+    fontFamily: f.bodySemibold,
   },
   textLg: {
     fontSize: typography.size.xl,
     fontWeight: typography.weight.bold,
+    fontFamily: f.bodyBold,
   },
   disabled: {
     opacity: 0.45,

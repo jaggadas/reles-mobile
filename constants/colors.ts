@@ -38,12 +38,12 @@ export const palette = {
 
 // ─── Semantic Tokens (light mode only) ────────────────────────
 export const colors = {
-  // Surfaces
-  background:       palette.white,
+  // Surfaces — warm cream background with white cards
+  background:       palette.creamLight,
   surface:          palette.white,
   card:             palette.white,
   cardElevated:     palette.white,
-  inputBackground:  palette.gray50,
+  inputBackground:  palette.white,
 
   // Text
   text:             palette.gray900,
@@ -67,17 +67,17 @@ export const colors = {
   warningLight:     '#FEF3C7',
   warningText:      '#92400E',
 
-  // UI
-  border:           palette.gray200,
-  borderLight:      palette.gray100,
-  separator:        palette.gray100,
+  // UI — slightly stronger borders for visible line aesthetic
+  border:           palette.gray300,
+  borderLight:      palette.gray200,
+  separator:        palette.gray200,
   icon:             palette.gray500,
   tabIconDefault:   palette.gray400,
   tabIconSelected:  palette.burgundy,
   tint:             palette.burgundy,
 
   // Progress
-  progressTrack:    palette.gray100,
+  progressTrack:    palette.gray200,
   progressFill:     palette.burgundy,
 
   // Specific
@@ -93,7 +93,7 @@ export const colors = {
   stepCircle:       palette.burgundy,
 
   // Category cards
-  categoryBg:       palette.gray50,
+  categoryBg:       palette.white,
 } as const;
 
 // ─── Spacing ───────────────────────────────────────────────────
@@ -121,6 +121,14 @@ export const radius = {
 
 // ─── Typography ────────────────────────────────────────────────
 export const typography = {
+  family: {
+    heading: 'Typewriter',
+    headingBold: 'Typewriter',
+    body: 'Napzer',
+    bodyMedium: 'Napzer',
+    bodySemibold: 'Napzer',
+    bodyBold: 'Napzer',
+  } as const,
   size: {
     xs: 11,
     sm: 12,
@@ -148,22 +156,22 @@ export const shadows = {
   sm: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.03,
     shadowRadius: 2,
     elevation: 1,
   },
   md: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
   lg: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    elevation: 6,
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
   },
 } as const;

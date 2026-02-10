@@ -278,6 +278,8 @@ export default function RecipeDetailScreen() {
   );
 }
 
+const f = typography.family;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -293,6 +295,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: typography.size['4xl'],
     fontWeight: typography.weight.bold,
+    fontFamily: f.headingBold,
     marginBottom: spacing.sm,
   },
   detailsCard: {
@@ -311,10 +314,12 @@ const styles = StyleSheet.create({
   detailLabel: {
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
+    fontFamily: f.bodyMedium,
   },
   detailValue: {
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
+    fontFamily: f.bodySemibold,
   },
   allergenBadge: {
     flexDirection: 'row',
@@ -327,6 +332,7 @@ const styles = StyleSheet.create({
   allergenText: {
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
+    fontFamily: f.bodyMedium,
   },
   instacartButton: {
     marginBottom: spacing.sm,
@@ -350,15 +356,18 @@ const styles = StyleSheet.create({
   videoTitle: {
     fontSize: typography.size.md,
     fontWeight: typography.weight.semibold,
+    fontFamily: f.bodySemibold,
     marginBottom: 2,
   },
   videoChannel: {
     fontSize: typography.size.sm,
+    fontFamily: f.body,
     marginBottom: 2,
   },
   videoLink: {
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
+    fontFamily: f.bodyMedium,
   },
   section: {
     marginTop: spacing.xl,
@@ -366,6 +375,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: typography.size['2xl'],
     fontWeight: typography.weight.bold,
+    fontFamily: f.headingBold,
     marginBottom: spacing.md,
   },
   companionList: {
@@ -382,11 +392,13 @@ const styles = StyleSheet.create({
   ingredientQuantity: {
     width: 90,
     fontSize: typography.size.base,
+    fontFamily: f.body,
     marginRight: spacing.sm,
   },
   ingredientName: {
     flex: 1,
     fontSize: typography.size.base,
+    fontFamily: f.body,
   },
   instructionRow: {
     flexDirection: 'row',
@@ -404,10 +416,12 @@ const styles = StyleSheet.create({
   stepNumberText: {
     fontSize: typography.size.sm,
     fontWeight: typography.weight.bold,
+    fontFamily: f.bodyBold,
   },
   instructionText: {
     flex: 1,
     fontSize: typography.size.base,
+    fontFamily: f.body,
     lineHeight: 20,
   },
   deleteLink: {
@@ -421,6 +435,7 @@ const styles = StyleSheet.create({
   deleteLinkText: {
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
+    fontFamily: f.bodyMedium,
   },
   warningCard: {
     borderRadius: radius.lg,
@@ -438,9 +453,11 @@ const styles = StyleSheet.create({
   warningTitle: {
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
+    fontFamily: f.bodySemibold,
   },
   warningBody: {
     fontSize: typography.size.sm,
+    fontFamily: f.body,
   },
   highlightRow: {
     flexDirection: 'row',
@@ -459,10 +476,12 @@ const styles = StyleSheet.create({
   highlightBulletText: {
     fontSize: typography.size.sm,
     fontWeight: typography.weight.bold,
+    fontFamily: f.bodyBold,
   },
   highlightText: {
     flex: 1,
     fontSize: typography.size.sm,
+    fontFamily: f.body,
     lineHeight: 18,
   },
   relatedScroll: {
@@ -481,9 +500,11 @@ const styles = StyleSheet.create({
   relatedTitle: {
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
+    fontFamily: f.bodySemibold,
   },
   relatedChannel: {
     fontSize: typography.size.xs,
+    fontFamily: f.body,
     marginTop: 2,
   },
 });

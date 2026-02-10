@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
-import { colors, spacing, radius, typography, shadows } from '@/constants/colors';
+import { colors, spacing, radius, typography } from '@/constants/colors';
 import { ExtractionCard } from '@/components/ExtractionCard';
 import { VideoSearchResults } from '@/components/VideoSearchResults';
 import { EXPLORE_CATEGORIES } from '@/constants/explore-categories';
@@ -121,6 +121,7 @@ export default function HomeScreen() {
           <MaterialIcons name="arrow-forward" size={20} color={primaryTextColor as string} />
         </Pressable>
       </View>
+
       {/* Diet filter */}
       <View style={styles.dietFilterRow}>
         {DIET_FILTERS.map((f) => {
@@ -204,7 +205,7 @@ export default function HomeScreen() {
                 onPress={() => router.push(`/recipe/${recipeOfTheDay.id}`)}
                 style={({ pressed }) => [
                   styles.heroCard,
-                  { backgroundColor: cardBg, transform: [{ scale: pressed ? 0.98 : 1 }] },
+                  { backgroundColor: cardBg, opacity: pressed ? 0.9 : 1 },
                 ]}
               >
                 <Image
@@ -256,7 +257,7 @@ export default function HomeScreen() {
                     onPress={() => router.push(`/recipe/${item.id}`)}
                     style={({ pressed }) => [
                       styles.recentCard,
-                      { backgroundColor: cardBg, transform: [{ scale: pressed ? 0.97 : 1 }] },
+                      { backgroundColor: cardBg, opacity: pressed ? 0.85 : 1 },
                     ]}
                   >
                     <Image
@@ -297,7 +298,7 @@ export default function HomeScreen() {
                       styles.suggestionChip,
                       {
                         backgroundColor: primaryLightColor as string,
-                        transform: [{ scale: pressed ? 0.95 : 1 }],
+                        opacity: pressed ? 0.7 : 1,
                       },
                     ]}
                   >
@@ -366,7 +367,7 @@ export default function HomeScreen() {
                     {
                       backgroundColor: categoryBg as string,
                       borderColor: borderColor as string,
-                      transform: [{ scale: pressed ? 0.95 : 1 }],
+                      opacity: pressed ? 0.7 : 1,
                     },
                   ]}
                 >
@@ -401,7 +402,7 @@ export default function HomeScreen() {
                     onPress={() => handlePopularPress(item)}
                     style={({ pressed }) => [
                       styles.popularCard,
-                      { backgroundColor: cardBg, transform: [{ scale: pressed ? 0.97 : 1 }] },
+                      { backgroundColor: cardBg, opacity: pressed ? 0.85 : 1 },
                     ]}
                   >
                     <Image
@@ -428,7 +429,7 @@ export default function HomeScreen() {
             </View>
           )}
 
-          <View style={{ height: spacing.xxl }} />
+          <View style={{ height: spacing['3xl'] }} />
         </ScrollView>
       )}
     </SafeAreaView>
@@ -437,6 +438,8 @@ export default function HomeScreen() {
 
 // ── Styles ────────────────────────────────────────────────────────
 
+const f = typography.family;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -444,16 +447,17 @@ const styles = StyleSheet.create({
 
   // Greeting
   greetingContainer: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.xs,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.sm,
   },
   greetingText: {
+    fontFamily: f.headingBold,
     fontSize: typography.size['4xl'],
-    fontWeight: typography.weight.bold,
-    letterSpacing: -0.5,
+    letterSpacing: -0.3,
   },
   greetingSubtext: {
+    fontFamily: f.body,
     fontSize: typography.size.lg,
     marginTop: spacing.xs,
   },
@@ -462,15 +466,15 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     gap: spacing.sm,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.xl,
     paddingTop: spacing.md,
     paddingBottom: spacing.sm,
   },
   dietFilterRow: {
     flexDirection: 'row',
     gap: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.sm,
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.md,
   },
   dietFilterButton: {
     flex: 1,
@@ -483,8 +487,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   dietFilterLabel: {
+    fontFamily: f.bodySemibold,
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
   },
   inputWrapper: {
     flex: 1,
@@ -498,6 +502,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
+    fontFamily: f.body,
     fontSize: typography.size.lg,
     height: '100%',
   },
@@ -511,10 +516,10 @@ const styles = StyleSheet.create({
 
   // Trending
   trendingContainer: {
-    paddingBottom: spacing.sm,
+    paddingBottom: spacing.md,
   },
   trendingScroll: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.xl,
     alignItems: 'center',
     gap: spacing.sm,
   },
@@ -525,8 +530,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   trendingLabel: {
+    fontFamily: f.bodyMedium,
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.medium,
   },
 
   // Loading
@@ -536,6 +541,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   loadingText: {
+    fontFamily: f.body,
     fontSize: typography.size.lg,
   },
 
@@ -546,27 +552,28 @@ const styles = StyleSheet.create({
 
   // Sections
   section: {
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing['2xl'],
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.xxl,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
   },
   sectionTitle: {
+    fontFamily: f.headingBold,
     fontSize: typography.size['3xl'],
-    fontWeight: typography.weight.bold,
     letterSpacing: -0.3,
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
   },
 
   // Hero / Recipe of the Day
   heroCard: {
     borderRadius: radius.xl,
     overflow: 'hidden',
-    ...shadows.md,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
   },
   heroImage: {
     width: '100%',
@@ -577,8 +584,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   heroTitle: {
+    fontFamily: f.headingBold,
     fontSize: typography.size['2xl'],
-    fontWeight: typography.weight.bold,
     letterSpacing: -0.2,
   },
   heroMeta: {
@@ -592,8 +599,8 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
   },
   heroBadgeText: {
+    fontFamily: f.bodySemibold,
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
   },
   heroTime: {
     flexDirection: 'row',
@@ -601,8 +608,8 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   heroTimeText: {
+    fontFamily: f.bodyMedium,
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.medium,
   },
 
   // Recent recipes
@@ -610,15 +617,16 @@ const styles = StyleSheet.create({
     width: 140,
     borderRadius: radius.lg,
     overflow: 'hidden',
-    ...shadows.sm,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
   },
   recentThumbnail: {
     width: 140,
     height: 80,
   },
   recentTitle: {
+    fontFamily: f.bodySemibold,
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
     padding: spacing.sm,
     lineHeight: 16,
   },
@@ -636,8 +644,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   suggestionLabel: {
+    fontFamily: f.bodySemibold,
     fontSize: typography.size.base,
-    fontWeight: typography.weight.semibold,
   },
 
   // Category grid
@@ -659,8 +667,8 @@ const styles = StyleSheet.create({
     fontSize: 22,
   },
   categoryLabel: {
+    fontFamily: f.bodySemibold,
     fontSize: typography.size.xs,
-    fontWeight: typography.weight.semibold,
     textAlign: 'center',
   },
 
@@ -669,6 +677,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
   },
   seasonSubtitle: {
+    fontFamily: f.body,
     fontSize: typography.size.sm,
     marginTop: 2,
   },
@@ -685,8 +694,8 @@ const styles = StyleSheet.create({
     fontSize: 28,
   },
   seasonalLabel: {
+    fontFamily: f.bodySemibold,
     fontSize: typography.size.base,
-    fontWeight: typography.weight.semibold,
   },
 
   // Horizontal lists
@@ -699,7 +708,8 @@ const styles = StyleSheet.create({
     width: 180,
     borderRadius: radius.lg,
     overflow: 'hidden',
-    ...shadows.md,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
   },
   popularThumbnail: {
     width: 180,
@@ -710,8 +720,8 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   popularName: {
+    fontFamily: f.bodySemibold,
     fontSize: typography.size.base,
-    fontWeight: typography.weight.semibold,
     lineHeight: 18,
   },
   popularMeta: {
@@ -720,6 +730,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   popularCount: {
+    fontFamily: f.body,
     fontSize: typography.size.sm,
   },
 });

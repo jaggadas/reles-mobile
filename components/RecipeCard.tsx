@@ -66,6 +66,8 @@ export function RecipeCard({ recipe, onPress, onAddToGrocery, isInGroceryList }:
   );
 }
 
+const f = typography.family;
+
 const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
@@ -87,6 +89,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: typography.size.lg,
     fontWeight: typography.weight.semibold,
+    fontFamily: f.bodySemibold,
     marginBottom: spacing.xs,
   },
   meta: {
@@ -96,6 +99,7 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: typography.size.sm,
+    fontFamily: f.body,
   },
   addButton: {
     justifyContent: 'center',
