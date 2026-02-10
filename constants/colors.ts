@@ -36,125 +36,64 @@ export const palette = {
   transparent: 'transparent',
 } as const;
 
-// ─── Semantic Tokens ───────────────────────────────────────────
+// ─── Semantic Tokens (light mode only) ────────────────────────
 export const colors = {
-  light: {
-    // Surfaces
-    background:       palette.white,
-    surface:          palette.white,
-    card:             palette.white,
-    cardElevated:     palette.white,
-    inputBackground:  palette.gray50,
+  // Surfaces
+  background:       palette.white,
+  surface:          palette.white,
+  card:             palette.white,
+  cardElevated:     palette.white,
+  inputBackground:  palette.gray50,
 
-    // Text
-    text:             palette.gray900,
-    textSecondary:    palette.gray500,
-    textMuted:        palette.gray400,
-    textOnPrimary:    palette.white,
+  // Text
+  text:             palette.gray900,
+  textSecondary:    palette.gray500,
+  textMuted:        palette.gray400,
+  textOnPrimary:    palette.white,
 
-    // Brand
-    primary:          palette.burgundy,
-    primaryDark:      palette.burgundyDark,
-    primaryLight:     '#F3E8E8',
-    accent:           palette.terracotta,
-    link:             palette.burgundy,
+  // Brand
+  primary:          palette.burgundy,
+  primaryDark:      palette.burgundyDark,
+  primaryLight:     '#F3E8E8',
+  accent:           palette.terracotta,
+  link:             palette.burgundy,
 
-    // Semantic
-    success:          palette.olive,
-    successLight:     '#F0F5EB',
-    error:            palette.deepRed,
-    errorLight:       '#FEF2F2',
-    warning:          palette.orange,
-    warningLight:     '#FEF3C7',
-    warningText:      '#92400E',
+  // Semantic
+  success:          palette.olive,
+  successLight:     '#F0F5EB',
+  error:            palette.deepRed,
+  errorLight:       '#FEF2F2',
+  warning:          palette.orange,
+  warningLight:     '#FEF3C7',
+  warningText:      '#92400E',
 
-    // UI
-    border:           palette.gray200,
-    borderLight:      palette.gray100,
-    separator:        palette.gray100,
-    icon:             palette.gray500,
-    tabIconDefault:   palette.gray400,
-    tabIconSelected:  palette.burgundy,
-    tint:             palette.burgundy,
+  // UI
+  border:           palette.gray200,
+  borderLight:      palette.gray100,
+  separator:        palette.gray100,
+  icon:             palette.gray500,
+  tabIconDefault:   palette.gray400,
+  tabIconSelected:  palette.burgundy,
+  tint:             palette.burgundy,
 
-    // Progress
-    progressTrack:    palette.gray100,
-    progressFill:     palette.burgundy,
+  // Progress
+  progressTrack:    palette.gray100,
+  progressFill:     palette.burgundy,
 
-    // Specific
-    checkboxChecked:  palette.olive,
-    checkboxUnchecked: palette.gray300,
-    celebrationBg:    palette.olive,
-    deleteText:       palette.deepRed,
-    deleteBorder:     '#FECACA',
-    deleteBg:         '#FEF2F2',
-    allergenBg:       '#FEF3C7',
-    allergenIcon:     '#D97706',
-    allergenText:     '#92400E',
-    stepCircle:       palette.burgundy,
+  // Specific
+  checkboxChecked:  palette.olive,
+  checkboxUnchecked: palette.gray300,
+  celebrationBg:    palette.olive,
+  deleteText:       palette.deepRed,
+  deleteBorder:     '#FECACA',
+  deleteBg:         '#FEF2F2',
+  allergenBg:       '#FEF3C7',
+  allergenIcon:     '#D97706',
+  allergenText:     '#92400E',
+  stepCircle:       palette.burgundy,
 
-    // Category cards
-    categoryBg:       palette.gray50,
-  },
-
-  dark: {
-    // Surfaces
-    background:       '#0F1115',
-    surface:          '#1A1D23',
-    card:             '#1A1D23',
-    cardElevated:     '#22262E',
-    inputBackground:  '#22262E',
-
-    // Text
-    text:             '#F3F4F6',
-    textSecondary:    '#9CA3AF',
-    textMuted:        '#6B7280',
-    textOnPrimary:    '#F3F4F6',
-
-    // Brand
-    primary:          '#D4736A',
-    primaryDark:      '#B85C54',
-    primaryLight:     '#2D1F1E',
-    accent:           palette.terracotta,
-    link:             '#D4736A',
-
-    // Semantic
-    success:          '#7C9A5E',
-    successLight:     '#1F2F1A',
-    error:            '#EF4444',
-    errorLight:       '#2D1B1B',
-    warning:          palette.orange,
-    warningLight:     '#2D2410',
-    warningText:      '#FCD34D',
-
-    // UI
-    border:           '#2A2E36',
-    borderLight:      '#22262E',
-    separator:        '#22262E',
-    icon:             '#9BA1A6',
-    tabIconDefault:   '#6B7280',
-    tabIconSelected:  '#D4736A',
-    tint:             '#D4736A',
-
-    // Progress
-    progressTrack:    '#22262E',
-    progressFill:     '#D4736A',
-
-    // Specific
-    checkboxChecked:  '#7C9A5E',
-    checkboxUnchecked:'#4B5563',
-    celebrationBg:    '#7C9A5E',
-    deleteText:       '#EF4444',
-    deleteBorder:     '#5C2626',
-    deleteBg:         '#2D1B1B',
-    allergenBg:       '#2D2410',
-    allergenIcon:     '#FCD34D',
-    allergenText:     '#FCD34D',
-    stepCircle:       '#D4736A',
-
-    // Category cards
-    categoryBg:       '#22262E',
-  },
+  // Category cards
+  categoryBg:       palette.gray50,
 } as const;
 
 // ─── Spacing ───────────────────────────────────────────────────

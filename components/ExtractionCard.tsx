@@ -2,7 +2,6 @@ import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import type { ExtractionPhase } from '@/lib/types';
-import { useThemeColor } from '@/hooks/use-theme-color';
 import { colors, spacing, radius, typography, shadows } from '@/constants/colors';
 
 interface Props {
@@ -25,10 +24,7 @@ function ShimmerBlock({ width, height, style, shimmerAnim }: {
   style?: object;
   shimmerAnim: Animated.Value;
 }) {
-  const baseColor = useThemeColor(
-    { light: colors.light.progressTrack, dark: colors.dark.progressTrack },
-    'background',
-  );
+  const baseColor = colors.progressTrack;
 
   const opacity = shimmerAnim.interpolate({
     inputRange: [0, 0.5, 1],
@@ -55,42 +51,15 @@ export function ExtractionCard({ phase, error }: Props) {
   const shimmerAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  const cardBg = useThemeColor(
-    { light: colors.light.card, dark: colors.dark.card },
-    'background',
-  );
-  const textColor = useThemeColor(
-    { light: colors.light.text, dark: colors.dark.text },
-    'text',
-  );
-  const subtextColor = useThemeColor(
-    { light: colors.light.textSecondary, dark: colors.dark.textSecondary },
-    'text',
-  );
-  const errorColor = useThemeColor(
-    { light: colors.light.error, dark: colors.dark.error },
-    'text',
-  );
-  const errorBg = useThemeColor(
-    { light: colors.light.errorLight, dark: colors.dark.errorLight },
-    'background',
-  );
-  const successColor = useThemeColor(
-    { light: colors.light.success, dark: colors.dark.success },
-    'text',
-  );
-  const primaryColor = useThemeColor(
-    { light: colors.light.primary, dark: colors.dark.primary },
-    'tint',
-  );
-  const progressTrack = useThemeColor(
-    { light: colors.light.progressTrack, dark: colors.dark.progressTrack },
-    'background',
-  );
-  const borderColor = useThemeColor(
-    { light: colors.light.borderLight, dark: colors.dark.borderLight },
-    'text',
-  );
+  const cardBg = colors.card;
+  const textColor = colors.text;
+  const subtextColor = colors.textSecondary;
+  const errorColor = colors.error;
+  const errorBg = colors.errorLight;
+  const successColor = colors.success;
+  const primaryColor = colors.primary;
+  const progressTrack = colors.progressTrack;
+  const borderColor = colors.borderLight;
 
   useEffect(() => {
     if (phase !== 'idle') {
@@ -121,7 +90,7 @@ export function ExtractionCard({ phase, error }: Props) {
   if (error) {
     return (
       <View style={[styles.errorCard, { backgroundColor: errorBg, borderColor: errorColor }]}>
-        <MaterialIcons name="error-outline" size={20} color={errorColor as string} />
+        <MaterialIcons name="error-outline" size={20} color={errorColor} />
         <Text style={[styles.errorText, { color: errorColor }]}>{error}</Text>
       </View>
     );
@@ -135,12 +104,12 @@ export function ExtractionCard({ phase, error }: Props) {
   return (
     <Animated.View style={[styles.wrapper, { opacity: fadeAnim }]}>
       {/* Status header */}
-      <View style={[styles.statusBar, { backgroundColor: cardBg, borderColor: borderColor as string }]}>
+      <View style={[styles.statusBar, { backgroundColor: cardBg, borderColor: borderColor }]}>
         <View style={styles.statusLeft}>
           <MaterialIcons
             name={config.icon as any}
             size={20}
-            color={isSuccess ? (successColor as string) : (primaryColor as string)}
+            color={isSuccess ? successColor : primaryColor}
           />
           <Text style={[
             styles.statusLabel,
@@ -167,8 +136,8 @@ export function ExtractionCard({ phase, error }: Props) {
                 {
                   backgroundColor:
                     i < currentStep
-                      ? (primaryColor as string)
-                      : (progressTrack as string),
+                      ? primaryColor
+                      : progressTrack,
                 },
               ]}
             />
@@ -178,7 +147,7 @@ export function ExtractionCard({ phase, error }: Props) {
 
       {/* Skeleton recipe card */}
       {!isSuccess && (
-        <View style={[styles.skeletonCard, { backgroundColor: cardBg, borderColor: borderColor as string }]}>
+        <View style={[styles.skeletonCard, { backgroundColor: cardBg, borderColor: borderColor }]}>
           {/* Thumbnail skeleton */}
           <ShimmerBlock width="100%" height={160} shimmerAnim={shimmerAnim} style={{ borderRadius: radius.md }} />
 

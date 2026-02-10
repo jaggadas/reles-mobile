@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, Image, FlatList } from 'react-native';
 import type { VideoSearchResult } from '@/lib/types';
-import { useThemeColor } from '@/hooks/use-theme-color';
 import { colors, spacing, radius, typography } from '@/constants/colors';
 
 interface Props {
@@ -10,18 +9,23 @@ interface Props {
 }
 
 export function VideoSearchResults({ results, onSelect }: Props) {
-  const textColor = useThemeColor(
-    { light: colors.light.text, dark: colors.dark.text },
-    'text',
-  );
-  const subtextColor = useThemeColor(
-    { light: colors.light.textSecondary, dark: colors.dark.textSecondary },
-    'text',
-  );
-  const separatorColor = useThemeColor(
-    { light: colors.light.separator, dark: colors.dark.separator },
-    'text',
-  );
+  const textColor = colors.text;
+  const subtextColor = colors.textSecondary;
+  const separatorColor = colors.separator;
+
+  const formatViews = (views?: number): string | null => {
+    if (views == null) return null;
+    if (views < 1000) return `${views} views`;
+    const units = ['K', 'M', 'B'];
+    let value = views;
+    let unitIndex = -1;
+    while (value >= 1000 && unitIndex < units.length - 1) {
+      value /= 1000;
+      unitIndex += 1;
+    }
+    const rounded = value >= 10 ? Math.round(value) : Math.round(value * 10) / 10;
+    return `${rounded}${unitIndex >= 0 ? units[unitIndex] : ''} views`;
+  };
 
   if (results.length === 0) return null;
 
@@ -39,6 +43,11 @@ export function VideoSearchResults({ results, onSelect }: Props) {
             <Text style={[styles.channel, { color: subtextColor }]} numberOfLines={1}>
               {item.channelName}
             </Text>
+            {formatViews(item.viewCount) && (
+              <Text style={[styles.views, { color: subtextColor }]} numberOfLines={1}>
+                {formatViews(item.viewCount)}
+              </Text>
+            )}
           </View>
         </Pressable>
       )}
@@ -73,5 +82,9 @@ const styles = StyleSheet.create({
   },
   channel: {
     fontSize: typography.size.sm,
+  },
+  views: {
+    fontSize: typography.size.xs,
+    marginTop: spacing.xs / 2,
   },
 });

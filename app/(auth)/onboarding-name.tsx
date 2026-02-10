@@ -13,7 +13,6 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { OnboardingProgress } from "@/components/OnboardingProgress";
 import { Button } from "@/components/ui";
 import { useAuth } from "@/contexts/AuthContext";
-import { useThemeColor } from "@/hooks/use-theme-color";
 import { colors, spacing, radius, typography } from "@/constants/colors";
 
 export default function OnboardingNameScreen() {
@@ -24,27 +23,6 @@ export default function OnboardingNameScreen() {
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const bgColor = useThemeColor(
-    { light: colors.light.background, dark: colors.dark.background },
-    "background"
-  );
-  const textColor = useThemeColor(
-    { light: colors.light.text, dark: colors.dark.text },
-    "text"
-  );
-  const subtextColor = useThemeColor(
-    { light: colors.light.textSecondary, dark: colors.dark.textSecondary },
-    "text"
-  );
-  const inputBg = useThemeColor(
-    { light: colors.light.inputBackground, dark: colors.dark.inputBackground },
-    "background"
-  );
-  const borderColor = useThemeColor(
-    { light: colors.light.border, dark: colors.dark.border },
-    "text"
-  );
 
   const handleContinue = async () => {
     if (!name.trim()) {
@@ -59,7 +37,7 @@ export default function OnboardingNameScreen() {
     setLoading(true);
     try {
       await register(params.email!, password, name.trim());
-      router.push("/(auth)/onboarding-cuisines");
+      router.push("/(auth)/onboarding-dietary");
     } catch (err: any) {
       Alert.alert("Registration failed", err.message || "Something went wrong");
     } finally {
@@ -68,7 +46,7 @@ export default function OnboardingNameScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: bgColor }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <OnboardingProgress currentStep={1} totalSteps={3} />
       <KeyboardAvoidingView
         style={styles.flex}
@@ -79,19 +57,19 @@ export default function OnboardingNameScreen() {
             <Text style={styles.illustrationEmoji}>👋</Text>
           </View>
 
-          <Text style={[styles.heading, { color: textColor }]}>
+          <Text style={[styles.heading, { color: colors.text }]}>
             Let's get to know you
           </Text>
-          <Text style={[styles.subheading, { color: subtextColor }]}>
+          <Text style={[styles.subheading, { color: colors.textSecondary }]}>
             Create your account to start saving recipes
           </Text>
 
           <View style={styles.fields}>
-            <View style={[styles.inputContainer, { backgroundColor: inputBg, borderColor }]}>
+            <View style={[styles.inputContainer, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}>
               <TextInput
-                style={[styles.input, { color: textColor }]}
+                style={[styles.input, { color: colors.text }]}
                 placeholder="Your name"
-                placeholderTextColor={subtextColor as string}
+                placeholderTextColor={colors.textSecondary}
                 value={name}
                 onChangeText={setName}
                 autoCapitalize="words"
@@ -100,11 +78,11 @@ export default function OnboardingNameScreen() {
               />
             </View>
 
-            <View style={[styles.inputContainer, { backgroundColor: inputBg, borderColor }]}>
+            <View style={[styles.inputContainer, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}>
               <TextInput
-                style={[styles.input, { color: textColor }]}
+                style={[styles.input, { color: colors.text }]}
                 placeholder="Create a password"
-                placeholderTextColor={subtextColor as string}
+                placeholderTextColor={colors.textSecondary}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
@@ -112,7 +90,7 @@ export default function OnboardingNameScreen() {
               />
             </View>
 
-            <Text style={[styles.hint, { color: subtextColor }]}>
+            <Text style={[styles.hint, { color: colors.textSecondary }]}>
               At least 6 characters
             </Text>
           </View>

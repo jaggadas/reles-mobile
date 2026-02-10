@@ -1,44 +1,50 @@
-import { Tabs } from 'expo-router';
+import { Tabs, useRouter } from 'expo-router';
 import React from 'react';
-import { Pressable, Alert } from 'react-native';
+import { Platform, Pressable, Alert } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 import { HapticTab } from '@/components/haptic-tab';
-import { Colors } from '@/constants/theme';
 import { colors } from '@/constants/colors';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-  const scheme = colorScheme ?? 'light';
   const { logout } = useAuth();
+  const router = useRouter();
+
+  const doLogout = async () => {
+    await logout();
+    router.replace('/(auth)/login');
+  };
 
   const handleLogout = () => {
+    if (Platform.OS === 'web') {
+      doLogout();
+      return;
+    }
     Alert.alert('Log out', 'Are you sure you want to log out?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Log out', style: 'destructive', onPress: logout },
+      { text: 'Log out', style: 'destructive', onPress: doLogout },
     ]);
   };
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[scheme].tint,
-        tabBarInactiveTintColor: Colors[scheme].tabIconDefault,
+        tabBarActiveTintColor: colors.tint,
+        tabBarInactiveTintColor: colors.tabIconDefault,
         tabBarStyle: {
-          backgroundColor: colors[scheme].surface,
-          borderTopColor: colors[scheme].borderLight,
+          backgroundColor: colors.surface,
+          borderTopColor: colors.borderLight,
         },
         headerStyle: {
-          backgroundColor: colors[scheme].surface,
+          backgroundColor: colors.surface,
         },
-        headerTintColor: colors[scheme].text,
+        headerTintColor: colors.text,
         headerShown: true,
         tabBarButton: HapticTab,
         headerRight: () => (
           <Pressable onPress={handleLogout} style={{ marginRight: 16 }}>
-            <MaterialIcons name="logout" size={22} color={colors[scheme].textSecondary} />
+            <MaterialIcons name="logout" size={22} color={colors.textSecondary} />
           </Pressable>
         ),
       }}>

@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import type { Recipe } from '@/lib/types';
 import { formatTime, formatDifficulty } from '@/lib/format';
-import { useThemeColor } from '@/hooks/use-theme-color';
 import { colors, spacing, radius, typography } from '@/constants/colors';
 
 interface Props {
@@ -14,30 +13,12 @@ interface Props {
 }
 
 export function RecipeCard({ recipe, onPress, onAddToGrocery, isInGroceryList }: Props) {
-  const cardBg = useThemeColor(
-    { light: colors.light.card, dark: colors.dark.card },
-    'background',
-  );
-  const textColor = useThemeColor(
-    { light: colors.light.text, dark: colors.dark.text },
-    'text',
-  );
-  const subtextColor = useThemeColor(
-    { light: colors.light.textSecondary, dark: colors.dark.textSecondary },
-    'text',
-  );
-  const borderColor = useThemeColor(
-    { light: colors.light.borderLight, dark: colors.dark.borderLight },
-    'text',
-  );
-  const primaryColor = useThemeColor(
-    { light: colors.light.primary, dark: colors.dark.primary },
-    'tint',
-  );
-  const errorColor = useThemeColor(
-    { light: colors.light.error, dark: colors.dark.error },
-    'text',
-  );
+  const cardBg = colors.card;
+  const textColor = colors.text;
+  const subtextColor = colors.textSecondary;
+  const borderColor = colors.borderLight;
+  const primaryColor = colors.primary;
+  const errorColor = colors.error;
 
   return (
     <Pressable onPress={onPress} style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
@@ -77,7 +58,7 @@ export function RecipeCard({ recipe, onPress, onAddToGrocery, isInGroceryList }:
           <MaterialIcons
             name={isInGroceryList ? "remove-shopping-cart" : "add-shopping-cart"}
             size={22}
-            color={isInGroceryList ? (errorColor as string) : (primaryColor as string)}
+            color={isInGroceryList ? errorColor : primaryColor}
           />
         </Pressable>
       )}

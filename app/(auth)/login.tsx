@@ -14,7 +14,6 @@ import { useRouter } from "expo-router";
 import { FeatureCarousel } from "@/components/FeatureCarousel";
 import { Button } from "@/components/ui";
 import { useAuth } from "@/contexts/AuthContext";
-import { useThemeColor } from "@/hooks/use-theme-color";
 import { colors, spacing, radius, typography, shadows } from "@/constants/colors";
 
 export default function LoginScreen() {
@@ -26,27 +25,6 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const passwordHeight = useRef(new Animated.Value(0)).current;
   const passwordOpacity = useRef(new Animated.Value(0)).current;
-
-  const bgColor = useThemeColor(
-    { light: colors.light.background, dark: colors.dark.background },
-    "background"
-  );
-  const textColor = useThemeColor(
-    { light: colors.light.text, dark: colors.dark.text },
-    "text"
-  );
-  const subtextColor = useThemeColor(
-    { light: colors.light.textSecondary, dark: colors.dark.textSecondary },
-    "text"
-  );
-  const inputBg = useThemeColor(
-    { light: colors.light.inputBackground, dark: colors.dark.inputBackground },
-    "background"
-  );
-  const borderColor = useThemeColor(
-    { light: colors.light.border, dark: colors.dark.border },
-    "text"
-  );
 
   const revealPassword = () => {
     setShowPassword(true);
@@ -124,7 +102,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: bgColor }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -134,15 +112,15 @@ export default function LoginScreen() {
         </View>
 
         <View style={styles.formSection}>
-          <Text style={[styles.tagline, { color: subtextColor }]}>
+          <Text style={[styles.tagline, { color: colors.textSecondary }]}>
             From saved to served
           </Text>
 
-          <View style={[styles.inputContainer, { backgroundColor: inputBg, borderColor }]}>
+          <View style={[styles.inputContainer, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}>
             <TextInput
-              style={[styles.input, { color: textColor }]}
+              style={[styles.input, { color: colors.text }]}
               placeholder="Enter your email"
-              placeholderTextColor={subtextColor as string}
+              placeholderTextColor={colors.textSecondary}
               value={email}
               onChangeText={setEmail}
               autoCapitalize="none"
@@ -159,11 +137,11 @@ export default function LoginScreen() {
               { height: passwordHeight, opacity: passwordOpacity },
             ]}
           >
-            <View style={[styles.inputContainer, { backgroundColor: inputBg, borderColor }]}>
+            <View style={[styles.inputContainer, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}>
               <TextInput
-                style={[styles.input, { color: textColor }]}
+                style={[styles.input, { color: colors.text }]}
                 placeholder="Password"
-                placeholderTextColor={subtextColor as string}
+                placeholderTextColor={colors.textSecondary}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry

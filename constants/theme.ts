@@ -3,20 +3,12 @@ import { colors } from './colors';
 
 export const Colors = {
   light: {
-    text: colors.light.text,
-    background: colors.light.background,
-    tint: colors.light.tint,
-    icon: colors.light.icon,
-    tabIconDefault: colors.light.tabIconDefault,
-    tabIconSelected: colors.light.tabIconSelected,
-  },
-  dark: {
-    text: colors.dark.text,
-    background: colors.dark.background,
-    tint: colors.dark.tint,
-    icon: colors.dark.icon,
-    tabIconDefault: colors.dark.tabIconDefault,
-    tabIconSelected: colors.dark.tabIconSelected,
+    text: colors.text,
+    background: colors.background,
+    tint: colors.tint,
+    icon: colors.icon,
+    tabIconDefault: colors.tabIconDefault,
+    tabIconSelected: colors.tabIconSelected,
   },
 };
 

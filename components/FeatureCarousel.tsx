@@ -10,36 +10,17 @@ import {
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { FEATURE_SLIDES } from "@/constants/features";
 import { colors, spacing, radius, typography } from "@/constants/colors";
-import { useThemeColor } from "@/hooks/use-theme-color";
 
 export function FeatureCarousel() {
   const { width } = useWindowDimensions();
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const textColor = useThemeColor(
-    { light: colors.light.text, dark: colors.dark.text },
-    "text"
-  );
-  const subtextColor = useThemeColor(
-    { light: colors.light.textSecondary, dark: colors.dark.textSecondary },
-    "text"
-  );
-  const dotActive = useThemeColor(
-    { light: colors.light.primary, dark: colors.dark.primary },
-    "tint"
-  );
-  const dotInactive = useThemeColor(
-    { light: colors.light.border, dark: colors.dark.border },
-    "text"
-  );
-  const primaryLight = useThemeColor(
-    { light: colors.light.primaryLight, dark: colors.dark.primaryLight },
-    "background"
-  );
-  const iconColor = useThemeColor(
-    { light: colors.light.primary, dark: colors.dark.primary },
-    "tint"
-  );
+  const textColor = colors.text;
+  const subtextColor = colors.textSecondary;
+  const dotActive = colors.primary;
+  const dotInactive = colors.border;
+  const primaryLight = colors.primaryLight;
+  const iconColor = colors.primary;
 
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
@@ -65,7 +46,7 @@ export function FeatureCarousel() {
               <MaterialIcons
                 name={item.icon as any}
                 size={44}
-                color={iconColor as string}
+                color={iconColor}
               />
             </View>
             <Text style={[styles.title, { color: textColor }]}>
@@ -85,7 +66,7 @@ export function FeatureCarousel() {
               styles.dot,
               {
                 backgroundColor:
-                  i === activeIndex ? (dotActive as string) : (dotInactive as string),
+                  i === activeIndex ? dotActive : dotInactive,
                 width: i === activeIndex ? 24 : 8,
               },
             ]}

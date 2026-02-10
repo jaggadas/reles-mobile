@@ -133,6 +133,7 @@ export async function extractIngredients(
     difficulty: data.difficulty,
     cuisine: data.cuisine,
     accompanyingRecipes: Array.isArray(data.accompanyingRecipes) ? data.accompanyingRecipes : [],
+    highlights: Array.isArray(data.highlights) ? data.highlights : [],
   };
 }
 

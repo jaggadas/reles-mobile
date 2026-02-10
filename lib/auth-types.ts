@@ -5,6 +5,8 @@ export interface UserPreferences {
     isVegan: boolean;
   };
   favoriteCategories: string[];
+  /** List of allergen identifiers the user wants to avoid (e.g. "peanuts", "gluten") */
+  allergens: string[];
 }
 
 export interface UserProfile {

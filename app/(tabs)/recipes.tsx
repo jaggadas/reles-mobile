@@ -3,7 +3,6 @@ import { StyleSheet, FlatList } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useThemeColor } from '@/hooks/use-theme-color';
 import { colors, spacing } from '@/constants/colors';
 import { RecipeCard } from '@/components/RecipeCard';
 import { EmptyState } from '@/components/ui';
@@ -20,10 +19,7 @@ export default function RecipesScreen() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [grocerySet, setGrocerySet] = useState<Set<string>>(new Set());
 
-  const bgColor = useThemeColor(
-    { light: colors.light.background, dark: colors.dark.background },
-    'background',
-  );
+  const bgColor = colors.background;
 
   useFocusEffect(
     useCallback(() => {

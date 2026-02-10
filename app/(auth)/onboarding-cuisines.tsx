@@ -6,24 +6,10 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { OnboardingProgress } from "@/components/OnboardingProgress";
 import { SwipeCardDeck } from "@/components/SwipeCardDeck";
 import { CUISINE_CARDS } from "@/constants/cuisines";
-import { useThemeColor } from "@/hooks/use-theme-color";
 import { colors, spacing, typography } from "@/constants/colors";
 
 export default function OnboardingCuisinesScreen() {
   const router = useRouter();
-
-  const bgColor = useThemeColor(
-    { light: colors.light.background, dark: colors.dark.background },
-    "background"
-  );
-  const textColor = useThemeColor(
-    { light: colors.light.text, dark: colors.dark.text },
-    "text"
-  );
-  const subtextColor = useThemeColor(
-    { light: colors.light.textSecondary, dark: colors.dark.textSecondary },
-    "text"
-  );
 
   const handleComplete = useCallback(
     (liked: string[]) => {
@@ -36,15 +22,15 @@ export default function OnboardingCuisinesScreen() {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: bgColor }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <OnboardingProgress currentStep={2} totalSteps={3} />
 
       <View style={styles.header}>
         <Text style={styles.illustration}>🍳</Text>
-        <Text style={[styles.heading, { color: textColor }]}>
+        <Text style={[styles.heading, { color: colors.text }]}>
           What do you love?
         </Text>
-        <Text style={[styles.subheading, { color: subtextColor }]}>
+        <Text style={[styles.subheading, { color: colors.textSecondary }]}>
           Swipe right to like, left to skip
         </Text>
       </View>

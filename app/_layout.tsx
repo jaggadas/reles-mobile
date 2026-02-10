@@ -1,4 +1,4 @@
-import { DarkTheme, DefaultTheme, ThemeProvider, type Theme } from '@react-navigation/native';
+import { DefaultTheme, ThemeProvider, type Theme } from '@react-navigation/native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -6,7 +6,6 @@ import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import 'react-native-reanimated';
 import { ShareIntentProvider, useShareIntentContext } from 'expo-share-intent';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { colors } from '@/constants/colors';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { extractVideoId } from '@/lib/api';
@@ -15,25 +14,12 @@ const RelesLightTheme: Theme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    primary: colors.light.primary,
-    background: colors.light.background,
-    card: colors.light.surface,
-    text: colors.light.text,
-    border: colors.light.borderLight,
-    notification: colors.light.accent,
-  },
-};
-
-const RelesDarkTheme: Theme = {
-  ...DarkTheme,
-  colors: {
-    ...DarkTheme.colors,
-    primary: colors.dark.primary,
-    background: colors.dark.background,
-    card: colors.dark.surface,
-    text: colors.dark.text,
-    border: colors.dark.borderLight,
-    notification: colors.dark.accent,
+    primary: colors.primary,
+    background: colors.background,
+    card: colors.surface,
+    text: colors.text,
+    border: colors.borderLight,
+    notification: colors.accent,
   },
 };
 
@@ -51,7 +37,7 @@ function RootNavigator() {
     if (status === 'logged_out' && !inAuthGroup) {
       router.replace('/(auth)/login');
     } else if (status === 'onboarding' && !inAuthGroup) {
-      router.replace('/(auth)/onboarding-cuisines');
+      router.replace('/(auth)/onboarding-dietary');
     } else if (status === 'logged_in' && inAuthGroup) {
       router.replace('/(tabs)');
     }
@@ -74,7 +60,7 @@ function RootNavigator() {
   if (isLoading) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator size="large" color={colors.light.primary} />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -99,12 +85,10 @@ function RootNavigator() {
 }
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-
   return (
     <ShareIntentProvider>
       <AuthProvider>
-        <ThemeProvider value={colorScheme === 'dark' ? RelesDarkTheme : RelesLightTheme}>
+        <ThemeProvider value={RelesLightTheme}>
           <RootNavigator />
         </ThemeProvider>
       </AuthProvider>
@@ -117,6 +101,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.light.background,
+    backgroundColor: colors.background,
   },
 });

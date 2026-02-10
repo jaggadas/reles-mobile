@@ -8,75 +8,37 @@ import {
   Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useLocalSearchParams } from "expo-router";
 import { OnboardingProgress } from "@/components/OnboardingProgress";
 import { Button } from "@/components/ui";
-import { DIETARY_OPTIONS, FOOD_CATEGORIES } from "@/constants/dietary";
+import { DIETARY_OPTIONS } from "@/constants/dietary";
+import { ALLERGEN_OPTIONS } from "@/constants/allergens";
 import { useAuth } from "@/contexts/AuthContext";
-import { useThemeColor } from "@/hooks/use-theme-color";
 import { colors, spacing, radius, typography } from "@/constants/colors";
 
 export default function OnboardingDietaryScreen() {
-  const params = useLocalSearchParams<{ cuisines: string }>();
   const { savePreferences } = useAuth();
 
   const [diet, setDiet] = useState<string>("none");
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedAllergens, setSelectedAllergens] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const bgColor = useThemeColor(
-    { light: colors.light.background, dark: colors.dark.background },
-    "background"
-  );
-  const textColor = useThemeColor(
-    { light: colors.light.text, dark: colors.dark.text },
-    "text"
-  );
-  const subtextColor = useThemeColor(
-    { light: colors.light.textSecondary, dark: colors.dark.textSecondary },
-    "text"
-  );
-  const primaryColor = useThemeColor(
-    { light: colors.light.primary, dark: colors.dark.primary },
-    "tint"
-  );
-  const primaryTextColor = useThemeColor(
-    { light: colors.light.textOnPrimary, dark: colors.dark.textOnPrimary },
-    "text"
-  );
-  const primaryLight = useThemeColor(
-    { light: colors.light.primaryLight, dark: colors.dark.primaryLight },
-    "background"
-  );
-  const cardBg = useThemeColor(
-    { light: colors.light.inputBackground, dark: colors.dark.inputBackground },
-    "background"
-  );
-  const borderColor = useThemeColor(
-    { light: colors.light.border, dark: colors.dark.border },
-    "text"
-  );
-
-  const toggleCategory = (id: string) => {
-    setSelectedCategories((prev) =>
-      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
+  const toggleAllergen = (id: string) => {
+    setSelectedAllergens((prev) =>
+      prev.includes(id) ? prev.filter((a) => a !== id) : [...prev, id]
     );
   };
 
   const handleFinish = async () => {
-    const likedCuisines: string[] = params.cuisines
-      ? JSON.parse(params.cuisines)
-      : [];
-
     setLoading(true);
     try {
       await savePreferences({
-        likedCuisines,
+        likedCuisines: [],
         dietaryRestrictions: {
           isVegetarian: diet === "vegetarian" || diet === "vegan",
           isVegan: diet === "vegan",
         },
-        favoriteCategories: selectedCategories,
+        favoriteCategories: [],
+        allergens: selectedAllergens,
       });
     } catch (err: any) {
       Alert.alert("Error", err.message || "Failed to save preferences");
@@ -86,7 +48,7 @@ export default function OnboardingDietaryScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: bgColor }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <OnboardingProgress currentStep={3} totalSteps={3} />
 
       <ScrollView
@@ -96,14 +58,14 @@ export default function OnboardingDietaryScreen() {
       >
         <Text style={styles.illustration}>🥑</Text>
 
-        <Text style={[styles.heading, { color: textColor }]}>
+        <Text style={[styles.heading, { color: colors.text }]}>
           Dietary preferences
         </Text>
-        <Text style={[styles.subheading, { color: subtextColor }]}>
+        <Text style={[styles.subheading, { color: colors.textSecondary }]}>
           Choose as many as apply
         </Text>
 
-        <Text style={[styles.sectionLabel, { color: textColor }]}>
+        <Text style={[styles.sectionLabel, { color: colors.text }]}>
           I eat...
         </Text>
         <View style={styles.dietGrid}>
@@ -117,11 +79,11 @@ export default function OnboardingDietaryScreen() {
                   styles.dietCard,
                   {
                     backgroundColor: isSelected
-                      ? (primaryLight as string)
-                      : (cardBg as string),
+                      ? colors.primaryLight
+                      : colors.card,
                     borderColor: isSelected
-                      ? (primaryColor as string)
-                      : (borderColor as string),
+                      ? colors.primary
+                      : colors.border,
                   },
                 ]}
               >
@@ -131,8 +93,8 @@ export default function OnboardingDietaryScreen() {
                     styles.dietLabel,
                     {
                       color: isSelected
-                        ? (primaryColor as string)
-                        : (textColor as string),
+                        ? colors.primary
+                        : colors.text,
                     },
                   ]}
                 >
@@ -143,40 +105,40 @@ export default function OnboardingDietaryScreen() {
           })}
         </View>
 
-        <Text style={[styles.sectionLabel, { color: textColor }]}>
-          I love making...
+        <Text style={[styles.sectionLabel, { color: colors.text }]}>
+          Allergens to avoid
         </Text>
         <View style={styles.chipGrid}>
-          {FOOD_CATEGORIES.map((cat) => {
-            const isSelected = selectedCategories.includes(cat.id);
+          {ALLERGEN_OPTIONS.map((allergen) => {
+            const isSelected = selectedAllergens.includes(allergen.id);
             return (
               <Pressable
-                key={cat.id}
-                onPress={() => toggleCategory(cat.id)}
+                key={allergen.id}
+                onPress={() => toggleAllergen(allergen.id)}
                 style={[
                   styles.chip,
                   {
                     backgroundColor: isSelected
-                      ? (primaryColor as string)
-                      : (cardBg as string),
+                      ? colors.primary
+                      : "transparent",
                     borderColor: isSelected
-                      ? (primaryColor as string)
-                      : (borderColor as string),
+                      ? colors.primary
+                      : colors.border,
                   },
                 ]}
               >
-                <Text style={styles.chipEmoji}>{cat.emoji}</Text>
+                <Text style={styles.chipEmoji}>{allergen.emoji}</Text>
                 <Text
                   style={[
                     styles.chipLabel,
                     {
                       color: isSelected
-                        ? (primaryTextColor as string)
-                        : (textColor as string),
+                        ? colors.textOnPrimary
+                        : colors.text,
                     },
                   ]}
                 >
-                  {cat.label}
+                  {allergen.label}
                 </Text>
               </Pressable>
             );

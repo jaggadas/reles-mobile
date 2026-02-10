@@ -15,7 +15,6 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
-import { useThemeColor } from '@/hooks/use-theme-color';
 import { useAuth } from '@/contexts/AuthContext';
 import { colors, spacing, radius, typography, shadows } from '@/constants/colors';
 import { ExtractionCard } from '@/components/ExtractionCard';
@@ -72,6 +71,7 @@ export default function HomeScreen() {
   const inputRef = useRef<TextInput>(null);
   const lastSearchParam = useRef<string | null>(null);
   const lastUrlParam = useRef<string | null>(null);
+  const [vegOnly, setVegOnly] = useState(false);
 
   // Memoized data
   const [trendingSearches] = useState<TrendingSearch[]>(() => getRandomTrending(6));
@@ -87,55 +87,19 @@ export default function HomeScreen() {
     return getSuggestionsForCuisines(user.preferences.likedCuisines, 8);
   }, [user?.preferences?.likedCuisines]);
 
-  // ── Theme colors ──
-  const bgColor = useThemeColor(
-    { light: colors.light.background, dark: colors.dark.background },
-    'background',
-  );
-  const textColor = useThemeColor(
-    { light: colors.light.text, dark: colors.dark.text },
-    'text',
-  );
-  const subtextColor = useThemeColor(
-    { light: colors.light.textSecondary, dark: colors.dark.textSecondary },
-    'text',
-  );
-  const inputBg = useThemeColor(
-    { light: colors.light.inputBackground, dark: colors.dark.inputBackground },
-    'background',
-  );
-  const placeholderColor = useThemeColor(
-    { light: colors.light.textMuted, dark: colors.dark.textMuted },
-    'text',
-  );
-  const primaryColor = useThemeColor(
-    { light: colors.light.primary, dark: colors.dark.primary },
-    'tint',
-  );
-  const primaryTextColor = useThemeColor(
-    { light: colors.light.textOnPrimary, dark: colors.dark.textOnPrimary },
-    'text',
-  );
-  const primaryLightColor = useThemeColor(
-    { light: colors.light.primaryLight, dark: colors.dark.primaryLight },
-    'background',
-  );
-  const cardBg = useThemeColor(
-    { light: colors.light.card, dark: colors.dark.card },
-    'background',
-  );
-  const accentColor = useThemeColor(
-    { light: colors.light.accent, dark: colors.dark.accent },
-    'tint',
-  );
-  const categoryBg = useThemeColor(
-    { light: colors.light.categoryBg, dark: colors.dark.categoryBg },
-    'background',
-  );
-  const borderColor = useThemeColor(
-    { light: colors.light.borderLight, dark: colors.dark.borderLight },
-    'text',
-  );
+  // ── Colors ──
+  const bgColor = colors.background;
+  const textColor = colors.text;
+  const subtextColor = colors.textSecondary;
+  const inputBg = colors.inputBackground;
+  const placeholderColor = colors.textMuted;
+  const primaryColor = colors.primary;
+  const primaryTextColor = colors.textOnPrimary;
+  const primaryLightColor = colors.primaryLight;
+  const cardBg = colors.card;
+  const accentColor = colors.accent;
+  const categoryBg = colors.categoryBg;
+  const borderColor = colors.borderLight;
 
   // ── Data loading ──
   useEffect(() => {
@@ -181,7 +145,8 @@ export default function HomeScreen() {
 
     setIsSearching(true);
     try {
-      const results = await searchRecipeVideos(trimmed);
+      const effectiveQuery = vegOnly ? `${trimmed} veg recipe` : trimmed;
+      const results = await searchRecipeVideos(effectiveQuery);
       setSearchResults(results);
       if (results.length === 0) {
         setError('No videos found. Try a different search.');
@@ -191,7 +156,7 @@ export default function HomeScreen() {
     } finally {
       setIsSearching(false);
     }
-  }, [query]);
+  }, [query, vegOnly]);
 
   const handleExtract = useCallback(async (videoId: string) => {
     setError(null);
@@ -298,6 +263,25 @@ export default function HomeScreen() {
           style={[styles.searchButton, { backgroundColor: primaryColor }]}
         >
           <MaterialIcons name="arrow-forward" size={20} color={primaryTextColor as string} />
+        </Pressable>
+      </View>
+      <View style={styles.vegToggleRow}>
+        <Pressable
+          onPress={() => setVegOnly((prev) => !prev)}
+          style={({ pressed }) => [
+            styles.vegToggle,
+            {
+              backgroundColor: pressed || vegOnly ? (primaryLightColor as string) : 'transparent',
+              borderColor: vegOnly ? (primaryColor as string) : (borderColor as string),
+            },
+          ]}
+        >
+          <MaterialIcons
+            name={vegOnly ? 'check-box' : 'check-box-outline-blank'}
+            size={16}
+            color={vegOnly ? (primaryColor as string) : (subtextColor as string)}
+          />
+          <Text style={[styles.vegToggleLabel, { color: subtextColor }]}>Veg mode</Text>
         </Pressable>
       </View>
 
@@ -623,6 +607,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     paddingBottom: spacing.sm,
+  },
+  vegToggleRow: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.sm,
+  },
+  vegToggle: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  vegToggleLabel: {
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.medium,
   },
   inputWrapper: {
     flex: 1,

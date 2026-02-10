@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { useThemeColor } from '@/hooks/use-theme-color';
 import { colors, radius, spacing, typography } from '@/constants/colors';
 
 interface TagProps {
@@ -9,18 +8,9 @@ interface TagProps {
 }
 
 export function Tag({ label, variant = 'filled' }: TagProps) {
-  const textColor = useThemeColor(
-    { light: colors.light.text, dark: colors.dark.text },
-    'text',
-  );
-  const filledBg = useThemeColor(
-    { light: colors.light.inputBackground, dark: colors.dark.inputBackground },
-    'background',
-  );
-  const borderColor = useThemeColor(
-    { light: colors.light.borderLight, dark: colors.dark.borderLight },
-    'text',
-  );
+  const textColor = colors.text;
+  const filledBg = colors.inputBackground;
+  const borderColor = colors.borderLight;
 
   const isOutlined = variant === 'outlined';
 

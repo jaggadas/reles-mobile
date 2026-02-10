@@ -8,7 +8,6 @@ import {
   type TextStyle,
 } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { useThemeColor } from '@/hooks/use-theme-color';
 import { colors, radius, spacing, typography } from '@/constants/colors';
 
 type Variant = 'primary' | 'secondary' | 'destructive' | 'ghost';
@@ -39,30 +38,12 @@ export function Button({
   textStyle,
   flex = false,
 }: ButtonProps) {
-  const primary = useThemeColor(
-    { light: colors.light.primary, dark: colors.dark.primary },
-    'tint',
-  );
-  const border = useThemeColor(
-    { light: colors.light.border, dark: colors.dark.border },
-    'text',
-  );
-  const textOnPrimary = useThemeColor(
-    { light: colors.light.textOnPrimary, dark: colors.dark.textOnPrimary },
-    'text',
-  );
-  const errorColor = useThemeColor(
-    { light: colors.light.deleteText, dark: colors.dark.deleteText },
-    'text',
-  );
-  const errorBg = useThemeColor(
-    { light: colors.light.deleteBg, dark: colors.dark.deleteBg },
-    'background',
-  );
-  const errorBorder = useThemeColor(
-    { light: colors.light.deleteBorder, dark: colors.dark.deleteBorder },
-    'text',
-  );
+  const primary = colors.primary;
+  const border = colors.border;
+  const textOnPrimary = colors.textOnPrimary;
+  const errorColor = colors.deleteText;
+  const errorBg = colors.deleteBg;
+  const errorBorder = colors.deleteBorder;
 
   const variantStyles: Record<Variant, { container: ViewStyle; text: TextStyle; iconColor: string }> = {
     primary: {

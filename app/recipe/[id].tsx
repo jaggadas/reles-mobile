@@ -15,18 +15,14 @@ import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import * as WebBrowser from 'expo-web-browser';
 
-import { useThemeColor } from '@/hooks/use-theme-color';
 import { colors, spacing, radius, typography } from '@/constants/colors';
 import { MetadataCard } from '@/components/MetadataCard';
 import { Button, Tag } from '@/components/ui';
-import type { Recipe } from '@/lib/types';
+import type { Recipe, VideoSearchResult } from '@/lib/types';
 import { formatDifficulty, formatCuisine, formatAllergens } from '@/lib/format';
-import {
-  getRecipeById,
-  updateRecipe,
-  deleteRecipe,
-} from '@/lib/storage';
-import { createInstacartRecipeLink } from '@/lib/api';
+import { getRecipeById, updateRecipe, deleteRecipe } from '@/lib/storage';
+import { createInstacartRecipeLink, searchRecipeVideos } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function RecipeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -35,59 +31,24 @@ export default function RecipeDetailScreen() {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [title, setTitle] = useState('');
   const [instacartLoading, setInstacartLoading] = useState(false);
+  const [relatedVideos, setRelatedVideos] = useState<VideoSearchResult[]>([]);
+  const [loadingRelated, setLoadingRelated] = useState(false);
 
-  const bgColor = useThemeColor(
-    { light: colors.light.background, dark: colors.dark.background },
-    'background',
-  );
-  const textColor = useThemeColor(
-    { light: colors.light.text, dark: colors.dark.text },
-    'text',
-  );
-  const subtextColor = useThemeColor(
-    { light: colors.light.textSecondary, dark: colors.dark.textSecondary },
-    'text',
-  );
-  const cardBg = useThemeColor(
-    { light: colors.light.card, dark: colors.dark.card },
-    'background',
-  );
-  const borderColor = useThemeColor(
-    { light: colors.light.borderLight, dark: colors.dark.borderLight },
-    'text',
-  );
-  const primaryColor = useThemeColor(
-    { light: colors.light.primary, dark: colors.dark.primary },
-    'tint',
-  );
-  const linkColor = useThemeColor(
-    { light: colors.light.link, dark: colors.dark.link },
-    'tint',
-  );
-  const allergenBg = useThemeColor(
-    { light: colors.light.allergenBg, dark: colors.dark.allergenBg },
-    'background',
-  );
-  const allergenIcon = useThemeColor(
-    { light: colors.light.allergenIcon, dark: colors.dark.allergenIcon },
-    'text',
-  );
-  const allergenText = useThemeColor(
-    { light: colors.light.allergenText, dark: colors.dark.allergenText },
-    'text',
-  );
-  const stepCircle = useThemeColor(
-    { light: colors.light.stepCircle, dark: colors.dark.stepCircle },
-    'tint',
-  );
-  const errorColor = useThemeColor(
-    { light: colors.light.deleteText, dark: colors.dark.deleteText },
-    'text',
-  );
-  const textOnPrimary = useThemeColor(
-    { light: colors.light.textOnPrimary, dark: colors.dark.textOnPrimary },
-    'text',
-  );
+  const { user } = useAuth();
+
+  const bgColor = colors.background;
+  const textColor = colors.text;
+  const subtextColor = colors.textSecondary;
+  const cardBg = colors.card;
+  const borderColor = colors.borderLight;
+  const primaryColor = colors.primary;
+  const linkColor = colors.link;
+  const allergenBg = colors.allergenBg;
+  const allergenIcon = colors.allergenIcon;
+  const allergenText = colors.allergenText;
+  const stepCircle = colors.stepCircle;
+  const errorColor = colors.deleteText;
+  const textOnPrimary = colors.textOnPrimary;
 
   const loadRecipe = useCallback(async () => {
     if (!id) return;
@@ -101,6 +62,31 @@ export default function RecipeDetailScreen() {
   useEffect(() => {
     loadRecipe();
   }, [loadRecipe]);
+
+  useEffect(() => {
+    if (!recipe) return;
+    const query = recipe.title || recipe.videoTitle;
+    if (!query) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        setLoadingRelated(true);
+        const results = await searchRecipeVideos(`${query} recipe`);
+        if (cancelled) return;
+        const filtered = results.filter((v) => v.videoId !== recipe.videoId).slice(0, 4);
+        setRelatedVideos(filtered);
+      } catch {
+        if (!cancelled) setRelatedVideos([]);
+      } finally {
+        if (!cancelled) setLoadingRelated(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [recipe]);
 
   async function handleTitleBlur() {
     if (!recipe || title === recipe.title) return;
@@ -129,6 +115,12 @@ export default function RecipeDetailScreen() {
       setInstacartLoading(false);
     }
   }
+
+  const userAllergens = user?.preferences?.allergens ?? [];
+  const recipeAllergens = recipe?.allergens ?? [];
+  const intersectingAllergens = recipeAllergens.filter((a) =>
+    userAllergens.includes(a.toLowerCase())
+  );
 
   function handleDelete() {
     if (!recipe) return;
@@ -225,6 +217,36 @@ export default function RecipeDetailScreen() {
           </View>
         )}
 
+        {/* Personalized allergen warning */}
+        {intersectingAllergens.length > 0 && (
+          <View style={[styles.warningCard, { backgroundColor: allergenBg, borderColor }]}>
+            <View style={styles.warningHeader}>
+              <MaterialIcons name="report-problem" size={18} color={allergenIcon as string} />
+              <Text style={[styles.warningTitle, { color: allergenText }]}>
+                Heads up – your allergens are present
+              </Text>
+            </View>
+            <Text style={[styles.warningBody, { color: allergenText }]}>
+              This recipe includes: {formatAllergens(intersectingAllergens)}.
+            </Text>
+          </View>
+        )}
+
+        {/* Highlights */}
+        {recipe.highlights && recipe.highlights.length > 0 && (
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: textColor }]}>Things to know</Text>
+            {recipe.highlights.map((h, idx) => (
+              <View key={idx} style={styles.highlightRow}>
+                <View style={[styles.highlightBullet, { backgroundColor: stepCircle }]}>
+                  <Text style={[styles.highlightBulletText, { color: textOnPrimary }]}>•</Text>
+                </View>
+                <Text style={[styles.highlightText, { color: textColor }]}>{h}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
         {/* Instacart */}
         <Button
           title="Order on Instacart"
@@ -254,6 +276,43 @@ export default function RecipeDetailScreen() {
               <Text style={[styles.videoLink, { color: linkColor }]}>Watch on YouTube</Text>
             </View>
           </Pressable>
+        )}
+
+        {/* Related videos from other creators */}
+        {(loadingRelated || relatedVideos.length > 0) && (
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: textColor }]}>More from other creators</Text>
+            {loadingRelated && relatedVideos.length === 0 ? (
+              <ActivityIndicator size="small" color={primaryColor as string} />
+            ) : (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.relatedScroll}
+              >
+                {relatedVideos.map((video) => (
+                  <Pressable
+                    key={video.videoId}
+                    style={styles.relatedCard}
+                    onPress={() =>
+                      router.navigate({
+                        pathname: '/(tabs)',
+                        params: { url: video.url },
+                      })
+                    }
+                  >
+                    <Image source={{ uri: video.thumbnail }} style={styles.relatedThumb} />
+                    <Text style={[styles.relatedTitle, { color: textColor }]} numberOfLines={2}>
+                      {video.title}
+                    </Text>
+                    <Text style={[styles.relatedChannel, { color: subtextColor }]} numberOfLines={1}>
+                      {video.channelName}
+                    </Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            )}
+          </View>
         )}
 
         {/* Accompanying recipes */}
@@ -469,5 +528,69 @@ const styles = StyleSheet.create({
   deleteLinkText: {
     fontSize: typography.size.base,
     fontWeight: typography.weight.medium,
+  },
+  warningCard: {
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  warningHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  warningTitle: {
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.semibold,
+  },
+  warningBody: {
+    fontSize: typography.size.sm,
+  },
+  highlightRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  highlightBullet: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+  },
+  highlightBulletText: {
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.bold,
+  },
+  highlightText: {
+    flex: 1,
+    fontSize: typography.size.sm,
+    lineHeight: 18,
+  },
+  relatedScroll: {
+    gap: spacing.md,
+  },
+  relatedCard: {
+    width: 180,
+    marginRight: spacing.md,
+  },
+  relatedThumb: {
+    width: 180,
+    height: 100,
+    borderRadius: radius.md,
+    marginBottom: spacing.xs,
+  },
+  relatedTitle: {
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.semibold,
+  },
+  relatedChannel: {
+    fontSize: typography.size.xs,
+    marginTop: 2,
   },
 });

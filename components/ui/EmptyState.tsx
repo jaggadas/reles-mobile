@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { useThemeColor } from '@/hooks/use-theme-color';
 import { colors, spacing, typography } from '@/constants/colors';
 
 interface EmptyStateProps {
@@ -16,18 +15,9 @@ interface EmptyStateProps {
  * TODO: IMAGE REPLACEMENT PENDING — Replace MaterialIcons with branded Reles illustrations.
  */
 export function EmptyState({ icon, title, subtitle, children }: EmptyStateProps) {
-  const textColor = useThemeColor(
-    { light: colors.light.text, dark: colors.dark.text },
-    'text',
-  );
-  const mutedColor = useThemeColor(
-    { light: colors.light.textMuted, dark: colors.dark.textMuted },
-    'text',
-  );
-  const iconColor = useThemeColor(
-    { light: colors.light.border, dark: colors.dark.border },
-    'text',
-  );
+  const textColor = colors.text;
+  const mutedColor = colors.textMuted;
+  const iconColor = colors.border;
 
   return (
     <View style={styles.container}>

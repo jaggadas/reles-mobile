@@ -1,7 +1,6 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import { colors, spacing, radius } from "@/constants/colors";
-import { useThemeColor } from "@/hooks/use-theme-color";
 
 interface Props {
   currentStep: number;
@@ -9,14 +8,8 @@ interface Props {
 }
 
 export function OnboardingProgress({ currentStep, totalSteps }: Props) {
-  const trackColor = useThemeColor(
-    { light: colors.light.progressTrack, dark: colors.dark.progressTrack },
-    "background"
-  );
-  const fillColor = useThemeColor(
-    { light: colors.light.progressFill, dark: colors.dark.progressFill },
-    "tint"
-  );
+  const trackColor = colors.progressTrack;
+  const fillColor = colors.progressFill;
 
   return (
     <View style={styles.container}>
@@ -27,7 +20,7 @@ export function OnboardingProgress({ currentStep, totalSteps }: Props) {
             styles.segment,
             {
               backgroundColor:
-                i < currentStep ? (fillColor as string) : (trackColor as string),
+                i < currentStep ? fillColor : trackColor,
             },
           ]}
         />

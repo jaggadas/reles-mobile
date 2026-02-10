@@ -17,6 +17,7 @@ function normalizeRecipe(recipe: Partial<Recipe>): Recipe {
     caloriesKcal: recipe.caloriesKcal ?? 0,
     difficulty: recipe.difficulty ?? 0,
     cuisine: recipe.cuisine ?? "OTHER",
+    highlights: recipe.highlights ?? [],
   } as Recipe;
 }
 

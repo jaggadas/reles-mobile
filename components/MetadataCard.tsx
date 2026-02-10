@@ -2,7 +2,6 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { formatTime } from '@/lib/format';
-import { useThemeColor } from '@/hooks/use-theme-color';
 import { colors, spacing, radius, typography } from '@/constants/colors';
 
 interface Props {
@@ -13,26 +12,11 @@ interface Props {
 }
 
 export function MetadataCard({ servings, prepTimeMinutes, cookTimeMinutes, caloriesKcal }: Props) {
-  const cardBg = useThemeColor(
-    { light: colors.light.card, dark: colors.dark.card },
-    'background',
-  );
-  const textColor = useThemeColor(
-    { light: colors.light.text, dark: colors.dark.text },
-    'text',
-  );
-  const subtextColor = useThemeColor(
-    { light: colors.light.textSecondary, dark: colors.dark.textSecondary },
-    'text',
-  );
-  const borderColor = useThemeColor(
-    { light: colors.light.borderLight, dark: colors.dark.borderLight },
-    'text',
-  );
-  const accentColor = useThemeColor(
-    { light: colors.light.accent, dark: colors.dark.accent },
-    'tint',
-  );
+  const cardBg = colors.card;
+  const textColor = colors.text;
+  const subtextColor = colors.textSecondary;
+  const borderColor = colors.borderLight;
+  const accentColor = colors.accent;
 
   const items: { icon: string; label: string; value: string }[] = [];
 
@@ -55,7 +39,7 @@ export function MetadataCard({ servings, prepTimeMinutes, cookTimeMinutes, calor
     <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
       {items.map((item) => (
         <View key={item.label} style={styles.item}>
-          <MaterialIcons name={item.icon as any} size={20} color={accentColor as string} />
+          <MaterialIcons name={item.icon as any} size={20} color={accentColor} />
           <Text style={[styles.value, { color: textColor }]}>{item.value}</Text>
           <Text style={[styles.label, { color: subtextColor }]}>{item.label}</Text>
         </View>

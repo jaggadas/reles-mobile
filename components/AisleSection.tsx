@@ -2,7 +2,6 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import type { AisleCategory } from '@/lib/types';
 import { AISLE_LABELS, AISLE_EMOJI } from '@/lib/aisles';
-import { useThemeColor } from '@/hooks/use-theme-color';
 import { colors, spacing, typography } from '@/constants/colors';
 
 interface Props {
@@ -10,14 +9,8 @@ interface Props {
 }
 
 export function AisleSection({ aisle }: Props) {
-  const textColor = useThemeColor(
-    { light: colors.light.text, dark: colors.dark.text },
-    'text',
-  );
-  const bgColor = useThemeColor(
-    { light: colors.light.inputBackground, dark: colors.dark.inputBackground },
-    'background',
-  );
+  const textColor = colors.text;
+  const bgColor = colors.inputBackground;
 
   return (
     <View style={[styles.header, { backgroundColor: bgColor }]}>
