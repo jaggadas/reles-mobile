@@ -1,17 +1,30 @@
-export const FEATURE_SLIDES = [
+import { ImageSourcePropType } from "react-native";
+
+export type FeatureSlide = {
+  image: ImageSourcePropType;
+  title: string;
+  subtitle: string;
+};
+
+export const FEATURE_SLIDES: FeatureSlide[] = [
   {
-    icon: "video-library" as const,
+    image: require("@/assets/illustrations/saved to served.png"),
+    title: "From Saved to Served",
+    subtitle: "Turn any YouTube cooking video into a beautiful, step-by-step recipe.",
+  },
+  {
+    image: require("@/assets/illustrations/extract recipes.png"),
     title: "Extract Recipes",
-    subtitle: "Paste any YouTube cooking video and get a full recipe with ingredients instantly.",
+    subtitle: "Paste a link, and we'll pull out ingredients, steps, and timings for you.",
   },
   {
-    icon: "menu-book" as const,
+    image: require("@/assets/illustrations/save and organize.png"),
     title: "Save & Organize",
-    subtitle: "Build your personal recipe collection. Search, browse, and cook anytime.",
+    subtitle: "Build your personal cookbook. Search, filter, and cook anytime you want.",
   },
   {
-    icon: "shopping-cart" as const,
-    title: "Grocery Lists",
-    subtitle: "Auto-generate grocery lists from recipes. Send to Instacart with one tap.",
+    image: require("@/assets/illustrations/grocery.png"),
+    title: "Smart Grocery Lists",
+    subtitle: "Auto-generate shopping lists from any recipe. Never forget an ingredient.",
   },
-] as const;
+];

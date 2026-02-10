@@ -88,7 +88,6 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: typography.size.lg,
-    fontWeight: typography.weight.semibold,
     fontFamily: f.bodySemibold,
     marginBottom: spacing.xs,
   },

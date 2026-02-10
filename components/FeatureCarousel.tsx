@@ -1,38 +1,49 @@
-import React, { useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
+  Image,
   FlatList,
   StyleSheet,
   useWindowDimensions,
   type ViewToken,
 } from "react-native";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { FEATURE_SLIDES } from "@/constants/features";
 import { colors, spacing, radius, typography } from "@/constants/colors";
 
 export function FeatureCarousel() {
   const { width } = useWindowDimensions();
   const [activeIndex, setActiveIndex] = useState(0);
+  const flatListRef = useRef<FlatList>(null);
+  const activeIndexRef = useRef(0);
 
-  const textColor = colors.text;
   const subtextColor = colors.textSecondary;
   const dotActive = colors.primary;
   const dotInactive = colors.border;
-  const primaryLight = colors.primaryLight;
-  const iconColor = colors.primary;
 
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
       if (viewableItems.length > 0 && viewableItems[0].index != null) {
+        activeIndexRef.current = viewableItems[0].index;
         setActiveIndex(viewableItems[0].index);
       }
     }
   ).current;
 
+  const scrollToNext = useCallback(() => {
+    const next = (activeIndexRef.current + 1) % FEATURE_SLIDES.length;
+    flatListRef.current?.scrollToIndex({ index: next, animated: true });
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(scrollToNext, 2000);
+    return () => clearInterval(timer);
+  }, [scrollToNext]);
+
   return (
     <View style={styles.container}>
       <FlatList
+        ref={flatListRef}
         data={FEATURE_SLIDES}
         horizontal
         pagingEnabled
@@ -42,19 +53,17 @@ export function FeatureCarousel() {
         keyExtractor={(_, i) => String(i)}
         renderItem={({ item }) => (
           <View style={[styles.slide, { width }]}>
-            <View style={[styles.iconCircle, { backgroundColor: primaryLight }]}>
-              <MaterialIcons
-                name={item.icon as any}
-                size={44}
-                color={iconColor}
-              />
-            </View>
-            <Text style={[styles.title, { color: textColor }]}>
+            <Text style={[styles.title, { color: dotActive }]}>
               {item.title}
             </Text>
             <Text style={[styles.subtitle, { color: subtextColor }]}>
               {item.subtitle}
             </Text>
+            <Image
+              source={item.image}
+              style={styles.illustration}
+              resizeMode="contain"
+            />
           </View>
         )}
       />
@@ -89,27 +98,23 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: spacing["3xl"],
   },
-  iconCircle: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: spacing["2xl"],
+  illustration: {
+    width: 280,
+    height: 280,
+    marginTop: spacing.md,
   },
   title: {
-    fontSize: typography.size["5xl"],
-    fontWeight: typography.weight.bold,
+    fontSize: typography.size["3xl"],
     fontFamily: f.headingBold,
     textAlign: "center",
     marginBottom: spacing.sm,
     letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: typography.size.xl,
+    fontSize: typography.size.base,
     fontFamily: f.body,
     textAlign: "center",
-    lineHeight: 24,
+    lineHeight: 20,
     paddingHorizontal: spacing.lg,
   },
   dots: {
@@ -117,7 +122,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     gap: spacing.sm,
-    paddingVertical: spacing.xl,
+    paddingVertical: spacing.md,
   },
   dot: {
     height: 8,

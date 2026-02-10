@@ -1,8 +1,16 @@
-export const DIETARY_OPTIONS = [
-  { id: "vegetarian", label: "Vegetarian", emoji: "🥬" },
-  { id: "vegan", label: "Vegan", emoji: "🌱" },
-  { id: "none", label: "Non-Vegetarian", emoji: "🍖" },
-] as const;
+import { ImageSourcePropType } from "react-native";
+
+export type DietaryOption = {
+  id: string;
+  label: string;
+  image: ImageSourcePropType;
+};
+
+export const DIETARY_OPTIONS: DietaryOption[] = [
+  { id: "vegetarian", label: "Vegetarian", image: require("@/assets/illustrations/veg.png") },
+  { id: "vegan", label: "Vegan", image: require("@/assets/illustrations/vegan.png") },
+  { id: "none", label: "Non-Veg", image: require("@/assets/illustrations/chicken.png") },
+];
 
 export const FOOD_CATEGORIES = [
   { id: "pasta", label: "Pasta", emoji: "🍝" },

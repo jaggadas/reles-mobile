@@ -202,12 +202,10 @@ const styles = StyleSheet.create({
   },
   statusLabel: {
     fontSize: typography.size.xl,
-    fontWeight: typography.weight.semibold,
     fontFamily: f.bodySemibold,
   },
   stepLabel: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.medium,
     fontFamily: f.bodyMedium,
   },
   progressDots: {
@@ -252,7 +250,6 @@ const styles = StyleSheet.create({
   errorText: {
     flex: 1,
     fontSize: typography.size.base,
-    fontWeight: typography.weight.medium,
     fontFamily: f.bodyMedium,
   },
 });

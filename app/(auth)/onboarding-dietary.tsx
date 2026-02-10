@@ -2,11 +2,13 @@ import React from "react";
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   Pressable,
   ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { OnboardingProgress } from "@/components/OnboardingProgress";
 import { Button } from "@/components/ui";
 import { DIETARY_OPTIONS } from "@/constants/dietary";
@@ -33,8 +35,6 @@ export default function OnboardingDietaryScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.illustration}>🥑</Text>
-
         <Text style={[styles.heading, { color: colors.text }]}>
           Dietary preferences
         </Text>
@@ -64,7 +64,11 @@ export default function OnboardingDietaryScreen() {
                   },
                 ]}
               >
-                <Text style={styles.dietEmoji}>{opt.emoji}</Text>
+                <Image
+                  source={opt.image}
+                  style={styles.dietImage}
+                  resizeMode="contain"
+                />
                 <Text
                   style={[
                     styles.dietLabel,
@@ -85,7 +89,7 @@ export default function OnboardingDietaryScreen() {
         <Text style={[styles.sectionLabel, { color: colors.text }]}>
           Allergens to avoid
         </Text>
-        <View style={styles.chipGrid}>
+        <View style={styles.allergenGrid}>
           {ALLERGEN_OPTIONS.map((allergen) => {
             const isSelected = selectedAllergens.includes(allergen.id);
             return (
@@ -93,27 +97,37 @@ export default function OnboardingDietaryScreen() {
                 key={allergen.id}
                 onPress={() => toggleAllergen(allergen.id)}
                 style={[
-                  styles.chip,
+                  styles.allergenCard,
                   {
                     backgroundColor: isSelected
-                      ? colors.primary
-                      : "transparent",
+                      ? colors.primaryLight
+                      : colors.card,
                     borderColor: isSelected
                       ? colors.primary
-                      : colors.border,
+                      : colors.borderLight,
                   },
                 ]}
               >
-                <Text style={styles.chipEmoji}>{allergen.emoji}</Text>
+                {isSelected && (
+                  <View style={styles.allergenCheck}>
+                    <MaterialIcons name="check" size={14} color={colors.textOnPrimary} />
+                  </View>
+                )}
+                <Image
+                  source={allergen.icon}
+                  style={styles.allergenIcon}
+                  resizeMode="contain"
+                />
                 <Text
                   style={[
-                    styles.chipLabel,
+                    styles.allergenLabel,
                     {
                       color: isSelected
-                        ? colors.textOnPrimary
+                        ? colors.primary
                         : colors.text,
                     },
                   ]}
+                  numberOfLines={1}
                 >
                   {allergen.label}
                 </Text>
@@ -150,14 +164,9 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.lg,
     alignItems: "center",
   },
-  illustration: {
-    fontSize: 48,
-    marginBottom: spacing.lg,
-  },
   heading: {
     fontSize: typography.size["5xl"],
     fontFamily: f.headingBold,
-    fontWeight: typography.weight.bold,
     letterSpacing: -0.5,
   },
   subheading: {
@@ -169,11 +178,12 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: typography.size["2xl"],
     fontFamily: f.headingBold,
-    fontWeight: typography.weight.semibold,
     marginBottom: spacing.md,
     marginTop: spacing.lg,
     alignSelf: "flex-start",
   },
+
+  // Diet grid
   dietGrid: {
     flexDirection: "row",
     gap: spacing.md,
@@ -182,42 +192,66 @@ const styles = StyleSheet.create({
   dietCard: {
     flex: 1,
     alignItems: "center",
-    gap: spacing.sm,
-    paddingVertical: spacing.xl,
+    justifyContent: "flex-end",
+    paddingBottom: spacing.sm,
+    aspectRatio: 0.85,
     borderRadius: radius.lg,
     borderWidth: 1.5,
+    overflow: "hidden",
   },
-  dietEmoji: {
-    fontSize: 28,
+  dietImage: {
+    width: "75%",
+    height: "75%",
+    position: "absolute",
+    top: "5%",
+    alignSelf: "center",
   },
   dietLabel: {
     fontSize: typography.size.lg,
     fontFamily: f.bodySemibold,
-    fontWeight: typography.weight.semibold,
   },
-  chipGrid: {
+
+  // Allergen grid — 3 columns with prominent icons
+  allergenGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: spacing.sm,
+    gap: spacing.md,
     width: "100%",
   },
-  chip: {
-    flexDirection: "row",
+  allergenCard: {
+    width: "30.5%",
     alignItems: "center",
-    gap: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderRadius: radius.full,
-    borderWidth: 1.5,
+    justifyContent: "flex-end",
+    aspectRatio: 1,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    paddingBottom: spacing.sm,
+    overflow: "hidden",
   },
-  chipEmoji: {
-    fontSize: 18,
+  allergenCheck: {
+    position: "absolute",
+    top: spacing.sm,
+    right: spacing.sm,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  chipLabel: {
-    fontSize: typography.size.lg,
-    fontFamily: f.bodyMedium,
-    fontWeight: typography.weight.medium,
+  allergenIcon: {
+    width: "70%",
+    height: "70%",
+    position: "absolute",
+    top: "5%",
+    alignSelf: "center",
   },
+  allergenLabel: {
+    fontSize: typography.size.sm,
+    fontFamily: f.bodySemibold,
+    textAlign: "center",
+  },
+
   footer: {
     paddingHorizontal: spacing["2xl"],
     paddingBottom: spacing.xxl,

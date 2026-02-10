@@ -31,6 +31,15 @@
     "plugins": [
       "expo-router",
       [
+        "expo-font",
+        {
+          "fonts": [
+            "./assets/fonts/AmericanTypewriter-01.ttf",
+            "./assets/fonts/Napzer-Regular.ttf"
+          ]
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",

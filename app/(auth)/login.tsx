@@ -114,11 +114,11 @@ const styles = StyleSheet.create({
   },
   formSection: {
     paddingHorizontal: spacing["2xl"],
-    paddingBottom: spacing["3xl"],
-    gap: spacing.md,
+    paddingBottom: spacing.xl,
+    gap: spacing.sm,
   },
   tagline: {
-    fontSize: typography.size.lg,
+    fontSize: typography.size.base,
     fontFamily: f.body,
     textAlign: "center",
     fontStyle: "italic",
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   inputContainer: {
-    height: 52,
+    height: 46,
     borderRadius: radius.md,
     borderWidth: 1,
     justifyContent: "center",
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     paddingHorizontal: spacing.lg,
-    fontSize: typography.size.xl,
+    fontSize: typography.size.lg,
     fontFamily: f.body,
   },
   passwordAnimated: {

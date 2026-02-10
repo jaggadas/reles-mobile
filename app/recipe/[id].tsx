@@ -294,7 +294,6 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: typography.size['4xl'],
-    fontWeight: typography.weight.bold,
     fontFamily: f.headingBold,
     marginBottom: spacing.sm,
   },
@@ -313,12 +312,10 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: typography.size.base,
-    fontWeight: typography.weight.medium,
     fontFamily: f.bodyMedium,
   },
   detailValue: {
     fontSize: typography.size.base,
-    fontWeight: typography.weight.semibold,
     fontFamily: f.bodySemibold,
   },
   allergenBadge: {
@@ -331,7 +328,6 @@ const styles = StyleSheet.create({
   },
   allergenText: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.medium,
     fontFamily: f.bodyMedium,
   },
   instacartButton: {
@@ -355,7 +351,6 @@ const styles = StyleSheet.create({
   },
   videoTitle: {
     fontSize: typography.size.md,
-    fontWeight: typography.weight.semibold,
     fontFamily: f.bodySemibold,
     marginBottom: 2,
   },
@@ -366,7 +361,6 @@ const styles = StyleSheet.create({
   },
   videoLink: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.medium,
     fontFamily: f.bodyMedium,
   },
   section: {
@@ -374,7 +368,6 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: typography.size['2xl'],
-    fontWeight: typography.weight.bold,
     fontFamily: f.headingBold,
     marginBottom: spacing.md,
   },
@@ -415,7 +408,6 @@ const styles = StyleSheet.create({
   },
   stepNumberText: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.bold,
     fontFamily: f.bodyBold,
   },
   instructionText: {
@@ -434,7 +426,6 @@ const styles = StyleSheet.create({
   },
   deleteLinkText: {
     fontSize: typography.size.base,
-    fontWeight: typography.weight.medium,
     fontFamily: f.bodyMedium,
   },
   warningCard: {
@@ -452,7 +443,6 @@ const styles = StyleSheet.create({
   },
   warningTitle: {
     fontSize: typography.size.base,
-    fontWeight: typography.weight.semibold,
     fontFamily: f.bodySemibold,
   },
   warningBody: {
@@ -475,7 +465,6 @@ const styles = StyleSheet.create({
   },
   highlightBulletText: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.bold,
     fontFamily: f.bodyBold,
   },
   highlightText: {
@@ -499,7 +488,6 @@ const styles = StyleSheet.create({
   },
   relatedTitle: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
     fontFamily: f.bodySemibold,
   },
   relatedChannel: {

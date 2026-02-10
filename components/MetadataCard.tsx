@@ -65,7 +65,6 @@ const styles = StyleSheet.create({
   },
   value: {
     fontSize: typography.size.lg,
-    fontWeight: typography.weight.semibold,
     fontFamily: f.bodySemibold,
   },
   label: {

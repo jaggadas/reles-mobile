@@ -38,7 +38,6 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: typography.size.md,
-    fontWeight: typography.weight.medium,
     fontFamily: f.bodyMedium,
   },
 });

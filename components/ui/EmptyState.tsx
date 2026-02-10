@@ -42,7 +42,6 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: typography.size['3xl'],
-    fontWeight: typography.weight.bold,
     fontFamily: f.headingBold,
     textAlign: 'center',
   },

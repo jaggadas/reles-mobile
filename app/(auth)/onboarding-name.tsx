@@ -3,6 +3,7 @@ import {
   View,
   Text,
   TextInput,
+  Image,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
@@ -30,51 +31,48 @@ export default function OnboardingNameScreen() {
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <View style={styles.content}>
-          <View style={styles.illustration}>
-            <Text style={styles.illustrationEmoji}>👋</Text>
-          </View>
+        <View style={styles.illustrationSection}>
+          <Image
+            source={require("@/assets/illustrations/lets get to know you.png")}
+            style={styles.illustrationImage}
+            resizeMode="contain"
+          />
+        </View>
 
-          <Text style={[styles.heading, { color: colors.text }]}>
-            Let's get to know you
-          </Text>
+        <View style={styles.formSection}>
           <Text style={[styles.subheading, { color: colors.textSecondary }]}>
             Create your account to start saving recipes
           </Text>
 
-          <View style={styles.fields}>
-            <View style={[styles.inputContainer, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}>
-              <TextInput
-                style={[styles.input, { color: colors.text }]}
-                placeholder="Your name"
-                placeholderTextColor={colors.textSecondary}
-                value={name}
-                onChangeText={setName}
-                autoCapitalize="words"
-                autoComplete="name"
-                autoFocus
-              />
-            </View>
-
-            <View style={[styles.inputContainer, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}>
-              <TextInput
-                style={[styles.input, { color: colors.text }]}
-                placeholder="Create a password"
-                placeholderTextColor={colors.textSecondary}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                autoComplete="new-password"
-              />
-            </View>
-
-            <Text style={[styles.hint, { color: colors.textSecondary }]}>
-              At least 6 characters
-            </Text>
+          <View style={[styles.inputContainer, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}>
+            <TextInput
+              style={[styles.input, { color: colors.text }]}
+              placeholder="Your name"
+              placeholderTextColor={colors.textSecondary}
+              value={name}
+              onChangeText={setName}
+              autoCapitalize="words"
+              autoComplete="name"
+              autoFocus
+            />
           </View>
-        </View>
 
-        <View style={styles.footer}>
+          <View style={[styles.inputContainer, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}>
+            <TextInput
+              style={[styles.input, { color: colors.text }]}
+              placeholder="Create a password"
+              placeholderTextColor={colors.textSecondary}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              autoComplete="new-password"
+            />
+          </View>
+
+          <Text style={[styles.hint, { color: colors.textSecondary }]}>
+            At least 6 characters
+          </Text>
+
           <Button
             title="Continue"
             onPress={handleContinue}
@@ -97,37 +95,28 @@ const styles = StyleSheet.create({
   flex: {
     flex: 1,
   },
-  content: {
+  illustrationSection: {
     flex: 1,
+    justifyContent: "center",
+    paddingHorizontal: spacing.xl,
+  },
+  illustrationImage: {
+    width: "100%",
+    height: "100%",
+  },
+  formSection: {
     paddingHorizontal: spacing["2xl"],
-    paddingTop: spacing.xl,
-  },
-  illustration: {
-    alignItems: "center",
-    marginBottom: spacing.xl,
-  },
-  illustrationEmoji: {
-    fontSize: 64,
-  },
-  heading: {
-    fontSize: typography.size["5xl"],
-    fontFamily: f.headingBold,
-    fontWeight: typography.weight.bold,
-    textAlign: "center",
-    letterSpacing: -0.5,
+    paddingBottom: spacing.xl,
+    gap: spacing.sm,
   },
   subheading: {
-    fontSize: typography.size.xl,
+    fontSize: typography.size.base,
     fontFamily: f.body,
     textAlign: "center",
-    marginTop: spacing.sm,
-    marginBottom: spacing["2xl"],
-  },
-  fields: {
-    gap: spacing.md,
+    marginBottom: spacing.xs,
   },
   inputContainer: {
-    height: 52,
+    height: 46,
     borderRadius: radius.md,
     borderWidth: 1,
     justifyContent: "center",
@@ -135,16 +124,12 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     paddingHorizontal: spacing.lg,
-    fontSize: typography.size.xl,
+    fontSize: typography.size.lg,
     fontFamily: f.body,
   },
   hint: {
     fontSize: typography.size.sm,
     fontFamily: f.body,
     marginLeft: spacing.xs,
-  },
-  footer: {
-    paddingHorizontal: spacing["2xl"],
-    paddingBottom: spacing.xxl,
   },
 });
