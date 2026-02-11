@@ -28,6 +28,23 @@ export async function getAuthHeaders(): Promise<Record<string, string>> {
 
 // ─── API Functions ──────────────────────────────────────────
 
+export async function apiCheckEmail(
+  email: string
+): Promise<{ exists: boolean }> {
+  const response = await fetch(`${API_BASE_URL}/api/auth/check-email`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => null);
+    throw new Error(data?.error ?? "Failed to check email");
+  }
+
+  return response.json();
+}
+
 export async function apiRegister(
   email: string,
   password: string,

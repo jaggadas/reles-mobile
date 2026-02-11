@@ -1,33 +1,12 @@
-import { Tabs, useRouter } from 'expo-router';
-import React from 'react';
-import { Platform, Pressable, Alert } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Image } from 'expo-image';
+import { Tabs } from 'expo-router';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
-import { colors, typography } from '@/constants/colors';
-import { useAuth } from '@/contexts/AuthContext';
+import { colors, palette, shadows, typography } from '@/constants/colors';
 
 export default function TabLayout() {
-  const { logout } = useAuth();
-  const router = useRouter();
-
-  const doLogout = async () => {
-    await logout();
-    router.replace('/(auth)/login');
-  };
-
-  const handleLogout = () => {
-    if (Platform.OS === 'web') {
-      doLogout();
-      return;
-    }
-    Alert.alert('Log out', 'Are you sure you want to log out?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Log out', style: 'destructive', onPress: doLogout },
-    ]);
-  };
-
   return (
     <Tabs
       screenOptions={{
@@ -35,7 +14,11 @@ export default function TabLayout() {
         tabBarInactiveTintColor: colors.tabIconDefault,
         tabBarStyle: {
           backgroundColor: colors.surface,
-          borderTopColor: colors.borderLight,
+          borderTopWidth: 0,
+          height: 88,
+          paddingTop: 8,
+          ...shadows.md,
+          elevation: 0,
         },
         headerStyle: {
           backgroundColor: colors.surface,
@@ -44,22 +27,14 @@ export default function TabLayout() {
         headerTitleStyle: {
           fontFamily: typography.family.headingBold,
         },
-        tabBarLabelStyle: {
-          fontFamily: typography.family.bodySemibold,
-          fontSize: typography.size.xs,
-        },
+        tabBarShowLabel: false,
         headerShown: true,
         tabBarButton: HapticTab,
-        headerRight: () => (
-          <Pressable onPress={handleLogout} style={{ marginRight: 16 }}>
-            <MaterialIcons name="logout" size={22} color={colors.textSecondary} />
-          </Pressable>
-        ),
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: 'Discover',
           headerTitle: () => (
             <Image
               source={require('@/assets/images/Reles.svg')}
@@ -67,8 +42,37 @@ export default function TabLayout() {
               contentFit="contain"
             />
           ),
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="search" size={size} color={color} />
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="home" size={28} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="search"
+        options={{
+          title: 'Search',
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="search" size={28} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="add"
+        options={{
+          title: 'Add',
+          headerShown: false,
+          tabBarIcon: () => null,
+          tabBarButton: () => (
+            <View style={styles.fabWrapper}>
+              <Pressable
+                style={styles.fab}
+                onPress={() => {
+                  // TODO: handle add action
+                }}
+              >
+                <MaterialIcons name="add" size={32} color={palette.white} />
+              </Pressable>
+            </View>
           ),
         }}
       />
@@ -76,11 +80,44 @@ export default function TabLayout() {
         name="recipes"
         options={{
           title: 'Recipes',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="menu-book" size={size} color={color} />
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="menu-book" size={28} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="person-outline" size={28} color={color} />
           ),
         }}
       />
     </Tabs>
   );
 }
+
+const FAB_SIZE = 60;
+
+const styles = StyleSheet.create({
+  fabWrapper: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fab: {
+    width: FAB_SIZE,
+    height: FAB_SIZE,
+    borderRadius: FAB_SIZE / 2,
+    backgroundColor: palette.darkTeal,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: -28,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+});

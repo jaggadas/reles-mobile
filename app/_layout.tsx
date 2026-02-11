@@ -68,7 +68,7 @@ function RootNavigator() {
 
     const videoId = extractVideoId(sharedText);
     if (videoId) {
-      router.navigate({ pathname: '/(tabs)', params: { url: sharedText } });
+      router.navigate({ pathname: '/(tabs)/search', params: { url: sharedText, _t: String(Date.now()) } } as any);
     }
     resetShareIntent();
   }, [hasShareIntent, status]);

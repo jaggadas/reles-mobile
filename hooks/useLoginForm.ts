@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { Alert, Animated } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
+import { apiCheckEmail } from "@/lib/auth";
 
 export function useLoginForm() {
   const router = useRouter();
@@ -32,62 +33,47 @@ export function useLoginForm() {
   };
 
   const handleContinue = async () => {
-    const trimmedEmail = email.trim();
-    if (!trimmedEmail) {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) {
       Alert.alert("Email required", "Please enter your email address.");
       return;
     }
 
-    // If password isn't shown yet, reveal it
-    if (!showPassword) {
-      revealPassword();
+    // If password is already shown, attempt login
+    if (showPassword) {
+      if (!password) {
+        Alert.alert("Password required", "Please enter your password.");
+        return;
+      }
+
+      setLoading(true);
+      try {
+        await login(normalizedEmail, password);
+      } catch (err: any) {
+        Alert.alert("Error", err.message || "Something went wrong");
+      } finally {
+        setLoading(false);
+      }
       return;
     }
 
-    if (!password) {
-      Alert.alert("Password required", "Please enter your password.");
-      return;
-    }
-
+    // Check if email exists and route accordingly
     setLoading(true);
     try {
-      await login(trimmedEmail, password);
-    } catch (err: any) {
-      if (err.message === "Invalid email or password") {
-        Alert.alert(
-          "Account not found",
-          "No account with this email. Would you like to create one?",
-          [
-            { text: "Try again" },
-            {
-              text: "Create account",
-              onPress: () => {
-                router.push({
-                  pathname: "/(auth)/onboarding-name",
-                  params: { email: trimmedEmail },
-                });
-              },
-            },
-          ]
-        );
+      const { exists } = await apiCheckEmail(normalizedEmail);
+      if (exists) {
+        revealPassword();
       } else {
-        Alert.alert("Error", err.message || "Something went wrong");
+        router.push({
+          pathname: "/(auth)/onboarding-name",
+          params: { email: normalizedEmail },
+        });
       }
+    } catch (err: any) {
+      Alert.alert("Error", err.message || "Something went wrong");
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleRegister = () => {
-    const trimmedEmail = email.trim();
-    if (!trimmedEmail) {
-      Alert.alert("Email required", "Please enter your email address first.");
-      return;
-    }
-    router.push({
-      pathname: "/(auth)/onboarding-name",
-      params: { email: trimmedEmail },
-    });
   };
 
   return {
@@ -100,6 +86,5 @@ export function useLoginForm() {
     passwordHeight,
     passwordOpacity,
     handleContinue,
-    handleRegister,
   };
 }

@@ -1,7 +1,7 @@
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import React from 'react';
-import { StyleSheet, FlatList } from 'react-native';
+import { StyleSheet, FlatList, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors, spacing } from '@/constants/colors';
 import { RecipeCard } from '@/components/RecipeCard';
@@ -11,23 +11,24 @@ import { useRecipeList } from '@/hooks/useRecipeList';
 export default function RecipesScreen() {
   const router = useRouter();
   const { recipes, grocerySet, toggleGrocery } = useRecipeList();
+  const tabBarHeight = useBottomTabBarHeight();
 
   const bgColor = colors.background;
 
   if (recipes.length === 0) {
     return (
-      <SafeAreaView edges={['bottom']} style={[styles.container, { backgroundColor: bgColor }]}>
+      <View style={[styles.container, { backgroundColor: bgColor }]}>
         <EmptyState
           icon="menu-book"
           title="No Recipes Yet"
-          subtitle="Go to the Extract tab to extract recipes from YouTube videos."
+          subtitle="Go to the Search tab to extract recipes from YouTube videos."
         />
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView edges={['bottom']} style={[styles.container, { backgroundColor: bgColor }]}>
+    <View style={[styles.container, { backgroundColor: bgColor }]}>
       <FlatList
         data={recipes}
         keyExtractor={(item) => item.id}
@@ -39,9 +40,9 @@ export default function RecipesScreen() {
             isInGroceryList={grocerySet.has(item.id)}
           />
         )}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingBottom: tabBarHeight }]}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 

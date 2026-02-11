@@ -1,45 +1,23 @@
-import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Keyboard } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import type { TextInput } from 'react-native';
 
-import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { getRandomTrending, type TrendingSearch } from '@/constants/trending';
-import { getSuggestionsForCuisines, type DishSuggestion } from '@/constants/suggestions';
-import { getCurrentSeason, type SeasonConfig } from '@/constants/seasonal';
-import type { ExtractionPhase, VideoSearchResult, Recipe } from '@/lib/types';
+import type { ExtractionPhase, VideoSearchResult } from '@/lib/types';
 import {
   extractVideoId,
   getThumbnailUrl,
   searchRecipeVideos,
   fetchVideoDetails,
   extractIngredients,
-  fetchPopularRecipes,
-  type PopularRecipe,
 } from '@/lib/api';
-import { insertRecipe, findRecipeByVideoId, getAllRecipes } from '@/lib/storage';
+import { insertRecipe, findRecipeByVideoId } from '@/lib/storage';
 
 // ── Types ────────────────────────────────────────────────────────
 
 export type DietFilter = 'all' | 'veg' | 'nonveg' | 'vegan';
-
-// ── Helpers ──────────────────────────────────────────────────────
-
-function getGreeting(name: string): { greeting: string; subtitle: string } {
-  const hour = new Date().getHours();
-  if (hour >= 5 && hour < 12) return { greeting: `Good morning, ${name}`, subtitle: "What should we cook today?" };
-  if (hour >= 12 && hour < 17) return { greeting: `Good afternoon, ${name}`, subtitle: "Looking for lunch ideas?" };
-  if (hour >= 17 && hour < 22) return { greeting: `Good evening, ${name}`, subtitle: "Time to make something delicious" };
-  return { greeting: `Late night cooking, ${name}?`, subtitle: "Let's find a midnight snack" };
-}
-
-function getRecipeOfTheDay(recipes: Recipe[]): Recipe | null {
-  if (recipes.length === 0) return null;
-  const now = new Date();
-  const hash = now.getDate() + now.getMonth() * 31 + now.getFullYear() * 366;
-  return recipes[hash % recipes.length];
-}
 
 // ── Return type ──────────────────────────────────────────────────
 
@@ -57,27 +35,20 @@ export interface UseRecipeSearchReturn {
   setDietFilter: React.Dispatch<React.SetStateAction<DietFilter>>;
   inputRef: React.RefObject<TextInput>;
 
-  // Computed / memoized data
-  greetingData: { greeting: string; subtitle: string };
+  // Computed
   trendingSearches: TrendingSearch[];
-  season: SeasonConfig;
-  recipeOfTheDay: Recipe | null;
-  recentRecipes: Recipe[];
-  forYouSuggestions: DishSuggestion[];
-  popularRecipes: PopularRecipe[];
   showIdle: boolean;
 
   // Handlers
   handleSearch: (searchQuery?: string) => Promise<void>;
   handleExtract: (videoId: string) => Promise<void>;
   handleSelectVideo: (result: VideoSearchResult) => void;
-  handlePopularPress: (recipe: PopularRecipe) => void;
-  handleCategoryPress: (categoryQuery: string) => void;
+  handleSuggestionPress: (suggestionQuery: string) => void;
 
-  // Navigation (exposed for UI that navigates directly)
+  // Navigation
   router: ReturnType<typeof useRouter>;
 
-  // Re-exported for UI usage
+  // Utilities
   getThumbnailUrl: typeof getThumbnailUrl;
 }
 
@@ -85,177 +56,169 @@ export interface UseRecipeSearchReturn {
 
 export function useRecipeSearch(): UseRecipeSearchReturn {
   const router = useRouter();
-  const { user } = useAuth();
   const { tryExtract, showPaywall, weeklyLimit, isPro } = useSubscription();
-  const params = useLocalSearchParams<{ search?: string; url?: string }>();
+  const params = useLocalSearchParams<{ search?: string; url?: string; _t?: string }>();
 
   const [query, setQuery] = useState('');
   const [searchResults, setSearchResults] = useState<VideoSearchResult[]>([]);
   const [phase, setPhase] = useState<ExtractionPhase>('idle');
   const [error, setError] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
-  const [popularRecipes, setPopularRecipes] = useState<PopularRecipe[]>([]);
-  const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
   const inputRef = useRef<TextInput>(null);
-  const lastSearchParam = useRef<string | null>(null);
-  const lastUrlParam = useRef<string | null>(null);
+  const lastSearchKey = useRef<string | null>(null);
+  const lastUrlKey = useRef<string | null>(null);
   const [dietFilter, setDietFilter] = useState<DietFilter>('all');
 
-  // Memoized data
+  // Trending searches for idle-state suggestions
   const [trendingSearches] = useState<TrendingSearch[]>(() => getRandomTrending(6));
-  const season = useMemo(() => getCurrentSeason(), []);
-  const greetingData = useMemo(
-    () => getGreeting(user?.name?.split(' ')[0] || 'Chef'),
-    [user?.name],
-  );
-  const recipeOfTheDay = useMemo(() => getRecipeOfTheDay(savedRecipes), [savedRecipes]);
-  const recentRecipes = useMemo(() => savedRecipes.slice(0, 5), [savedRecipes]);
-  const forYouSuggestions = useMemo<DishSuggestion[]>(() => {
-    if (!user?.preferences?.likedCuisines?.length) return [];
-    return getSuggestionsForCuisines(user.preferences.likedCuisines, 8);
-  }, [user?.preferences?.likedCuisines]);
 
-  // ── Data loading ──
+  // Handle search param from other screens (e.g. Discover tab)
   useEffect(() => {
-    fetchPopularRecipes(5).then(setPopularRecipes);
-    getAllRecipes().then(setSavedRecipes);
-  }, []);
-
-  // Handle search param from other screens
-  useEffect(() => {
-    if (params.search && params.search !== lastSearchParam.current) {
-      lastSearchParam.current = params.search;
+    const key = params._t ? `${params.search}_${params._t}` : params.search;
+    if (params.search && key !== lastSearchKey.current) {
+      lastSearchKey.current = key ?? null;
       setQuery(params.search);
       handleSearch(params.search);
     }
-  }, [params.search]);
+  }, [params.search, params._t]);
 
-  // Handle URL param from share intent
+  // Handle URL param from share intent or Discover tab
   useEffect(() => {
-    if (params.url && params.url !== lastUrlParam.current) {
-      lastUrlParam.current = params.url;
+    const key = params._t ? `${params.url}_${params._t}` : params.url;
+    if (params.url && key !== lastUrlKey.current) {
+      lastUrlKey.current = key ?? null;
       const videoId = extractVideoId(params.url);
       if (videoId) {
         setQuery(params.url);
         handleExtract(videoId);
       }
     }
-  }, [params.url]);
+  }, [params.url, params._t]);
 
   // ── Handlers ──
-  const handleSearch = useCallback(async (searchQuery?: string) => {
-    const trimmed = (searchQuery ?? query).trim();
-    if (!trimmed) return;
 
-    Keyboard.dismiss();
-    setError(null);
-    setSearchResults([]);
+  const handleSearch = useCallback(
+    async (searchQuery?: string) => {
+      const trimmed = (searchQuery ?? query).trim();
+      if (!trimmed) return;
 
-    const videoId = extractVideoId(trimmed);
-    if (videoId) {
-      await handleExtract(videoId);
-      return;
-    }
+      Keyboard.dismiss();
+      setError(null);
+      setSearchResults([]);
 
-    setIsSearching(true);
-    try {
-      const dietSuffix =
-        dietFilter === 'veg' ? ' vegetarian recipe' :
-        dietFilter === 'vegan' ? ' vegan recipe' :
-        dietFilter === 'nonveg' ? ' non-veg recipe' : '';
-      const effectiveQuery = trimmed + dietSuffix;
-      const results = await searchRecipeVideos(effectiveQuery);
-      setSearchResults(results);
-      if (results.length === 0) {
-        setError('No videos found. Try a different search.');
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Search failed');
-    } finally {
-      setIsSearching(false);
-    }
-  }, [query, dietFilter]);
-
-  const handleExtract = useCallback(async (videoId: string) => {
-    setError(null);
-    setSearchResults([]);
-
-    const existing = await findRecipeByVideoId(videoId);
-    if (existing) {
-      router.push(`/recipe/${existing.id}`);
-      return;
-    }
-
-    // Check extraction limit
-    const allowed = await tryExtract();
-    if (!allowed) {
-      const purchased = await showPaywall();
-      if (!purchased) {
-        setError(
-          `You've reached your weekly limit of ${weeklyLimit} recipes. Upgrade to Pro for ${isPro ? 'more' : '10'} recipes per week.`
-        );
+      const videoId = extractVideoId(trimmed);
+      if (videoId) {
+        await handleExtract(videoId);
         return;
       }
-      const retryAllowed = await tryExtract();
-      if (!retryAllowed) {
-        setError('You\'ve reached your weekly recipe limit. Please try again next week.');
+
+      setIsSearching(true);
+      try {
+        const dietSuffix =
+          dietFilter === 'veg'
+            ? ' vegetarian recipe'
+            : dietFilter === 'vegan'
+              ? ' vegan recipe'
+              : dietFilter === 'nonveg'
+                ? ' non-veg recipe'
+                : '';
+        const effectiveQuery = trimmed + dietSuffix;
+        const results = await searchRecipeVideos(effectiveQuery);
+        setSearchResults(results);
+        if (results.length === 0) {
+          setError('No videos found. Try a different search.');
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Search failed');
+      } finally {
+        setIsSearching(false);
+      }
+    },
+    [query, dietFilter],
+  );
+
+  const handleExtract = useCallback(
+    async (videoId: string) => {
+      setError(null);
+      setSearchResults([]);
+
+      const existing = await findRecipeByVideoId(videoId);
+      if (existing) {
+        router.push(`/recipe/${existing.id}`);
         return;
       }
-    }
 
-    try {
-      setPhase('fetching');
-      const details = await fetchVideoDetails(videoId);
+      // Check extraction limit
+      const allowed = await tryExtract();
+      if (!allowed) {
+        const purchased = await showPaywall();
+        if (!purchased) {
+          setError(
+            `You've reached your weekly limit of ${weeklyLimit} recipes. Upgrade to Pro for ${isPro ? 'more' : '10'} recipes per week.`,
+          );
+          return;
+        }
+        const retryAllowed = await tryExtract();
+        if (!retryAllowed) {
+          setError("You've reached your weekly recipe limit. Please try again next week.");
+          return;
+        }
+      }
 
-      setPhase('extracting');
-      const extracted = await extractIngredients(videoId);
+      try {
+        setPhase('fetching');
+        const details = await fetchVideoDetails(videoId);
 
-      setPhase('success');
+        setPhase('extracting');
+        const extracted = await extractIngredients(videoId);
 
-      const id = await insertRecipe({
-        videoId,
-        title: extracted.title || details.title,
-        videoTitle: details.title,
-        channelTitle: details.channelTitle,
-        thumbnail: getThumbnailUrl(videoId),
-        url: `https://www.youtube.com/watch?v=${videoId}`,
-        ingredients: extracted.ingredients,
-        instructions: extracted.instructions,
-        servings: extracted.servings,
-        prepTimeMinutes: extracted.prepTimeMinutes,
-        cookTimeMinutes: extracted.cookTimeMinutes,
-        allergens: extracted.allergens,
-        caloriesKcal: extracted.caloriesKcal,
-        difficulty: extracted.difficulty,
-        cuisine: extracted.cuisine,
-        accompanyingRecipes: extracted.accompanyingRecipes,
-      });
+        setPhase('success');
 
-      // Refresh saved recipes
-      getAllRecipes().then(setSavedRecipes);
+        const id = await insertRecipe({
+          videoId,
+          title: extracted.title || details.title,
+          videoTitle: details.title,
+          channelTitle: details.channelTitle,
+          thumbnail: getThumbnailUrl(videoId),
+          url: `https://www.youtube.com/watch?v=${videoId}`,
+          ingredients: extracted.ingredients,
+          instructions: extracted.instructions,
+          servings: extracted.servings,
+          prepTimeMinutes: extracted.prepTimeMinutes,
+          cookTimeMinutes: extracted.cookTimeMinutes,
+          allergens: extracted.allergens,
+          caloriesKcal: extracted.caloriesKcal,
+          difficulty: extracted.difficulty,
+          cuisine: extracted.cuisine,
+          accompanyingRecipes: extracted.accompanyingRecipes,
+        });
 
-      setTimeout(() => {
+        setTimeout(() => {
+          setPhase('idle');
+          router.push(`/recipe/${id}`);
+        }, 800);
+      } catch (err) {
         setPhase('idle');
-        router.push(`/recipe/${id}`);
-      }, 800);
-    } catch (err) {
-      setPhase('idle');
-      setError(err instanceof Error ? err.message : 'Extraction failed');
-    }
-  }, [router, tryExtract, showPaywall, weeklyLimit, isPro]);
+        setError(err instanceof Error ? err.message : 'Extraction failed');
+      }
+    },
+    [router, tryExtract, showPaywall, weeklyLimit, isPro],
+  );
 
-  const handleSelectVideo = useCallback((result: VideoSearchResult) => {
-    handleExtract(result.videoId);
-  }, [handleExtract]);
+  const handleSelectVideo = useCallback(
+    (result: VideoSearchResult) => {
+      handleExtract(result.videoId);
+    },
+    [handleExtract],
+  );
 
-  const handlePopularPress = useCallback((recipe: PopularRecipe) => {
-    handleExtract(recipe.videoId);
-  }, [handleExtract]);
-
-  const handleCategoryPress = useCallback((categoryQuery: string) => {
-    setQuery(categoryQuery);
-    handleSearch(categoryQuery);
-  }, [handleSearch]);
+  const handleSuggestionPress = useCallback(
+    (suggestionQuery: string) => {
+      setQuery(suggestionQuery);
+      handleSearch(suggestionQuery);
+    },
+    [handleSearch],
+  );
 
   const showIdle = !isSearching && searchResults.length === 0 && phase === 'idle' && !error;
 
@@ -273,27 +236,20 @@ export function useRecipeSearch(): UseRecipeSearchReturn {
     setDietFilter,
     inputRef,
 
-    // Computed / memoized data
-    greetingData,
+    // Computed
     trendingSearches,
-    season,
-    recipeOfTheDay,
-    recentRecipes,
-    forYouSuggestions,
-    popularRecipes,
     showIdle,
 
     // Handlers
     handleSearch,
     handleExtract,
     handleSelectVideo,
-    handlePopularPress,
-    handleCategoryPress,
+    handleSuggestionPress,
 
     // Navigation
     router,
 
-    // Re-exported utilities
+    // Utilities
     getThumbnailUrl,
   };
 }
