@@ -79,7 +79,7 @@ export interface VideoSearchResult {
   viewCount?: number;
 }
 
-export type ExtractionPhase = "idle" | "fetching" | "fetching-transcript" | "reading" | "extracting" | "success";
+export type ExtractionPhase = "idle" | "fetching" | "extracting" | "success";
 
 export type AisleCategory =
   | "produce"

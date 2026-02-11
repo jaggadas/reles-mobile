@@ -14,34 +14,21 @@ import {
 import { colors, radius, spacing, typography } from '@/constants/colors';
 import { EXPLORE_CATEGORIES } from '@/constants/explore-categories';
 import { useDiscovery } from '@/hooks/useDiscovery';
-import { formatCuisine } from '@/lib/format';
 
 // ── Component ────────────────────────────────────────────────────
 
 export default function DiscoverScreen() {
   const {
     greetingData,
-    trendingSearches,
-    season,
-    recipeOfTheDay,
+    heroRecipe,
+    topRecipes,
     recentRecipes,
     forYouSuggestions,
-    popularRecipes,
     navigateToSearch,
     navigateToExtract,
     getThumbnailUrl,
     router,
   } = useDiscovery();
-
-  // ── Colors ──
-  const textColor = colors.text;
-  const subtextColor = colors.textSecondary;
-  const primaryColor = colors.primary;
-  const primaryLightColor = colors.primaryLight;
-  const cardBg = colors.card;
-  const accentColor = colors.accent;
-  const categoryBg = colors.categoryBg;
-  const borderColor = colors.borderLight;
 
   const tabBarHeight = useBottomTabBarHeight();
 
@@ -54,89 +41,105 @@ export default function DiscoverScreen() {
       >
         {/* Greeting */}
         <View style={styles.greetingContainer}>
-          <Text style={[styles.greetingText, { color: textColor }]}>
+          <Text style={styles.greetingText}>
             {greetingData.greeting}
           </Text>
-          <Text style={[styles.greetingSubtext, { color: subtextColor }]}>
+          <Text style={styles.greetingSubtext}>
             {greetingData.subtitle}
           </Text>
         </View>
 
-        {/* Trending searches */}
-        <View style={styles.trendingContainer}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.trendingScroll}>
-            <MaterialIcons name="trending-up" size={16} color={subtextColor as string} style={{ marginRight: 6 }} />
-            {trendingSearches.map((item) => (
-              <Pressable
-                key={item.label}
-                onPress={() => navigateToSearch(item.query)}
-                style={({ pressed }) => [
-                  styles.trendingChip,
-                  {
-                    backgroundColor: categoryBg as string,
-                    borderColor: borderColor as string,
-                    opacity: pressed ? 0.7 : 1,
-                  },
-                ]}
-              >
-                <Text style={[styles.trendingLabel, { color: subtextColor }]}>{item.label}</Text>
-              </Pressable>
-            ))}
-          </ScrollView>
-        </View>
-
-        {/* Recipe of the Day */}
-        {recipeOfTheDay && (
+        {/* Hero: Recipe of the Day (from API) */}
+        {heroRecipe && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <MaterialIcons name="auto-awesome" size={20} color={primaryColor as string} />
-              <Text style={[styles.sectionTitle, { color: textColor, marginBottom: 0 }]}>
+              <MaterialIcons name="auto-awesome" size={20} color={colors.primary} />
+              <Text style={styles.sectionTitleInline}>
                 Recipe of the Day
               </Text>
             </View>
             <Pressable
-              onPress={() => router.push(`/recipe/${recipeOfTheDay.id}`)}
+              onPress={() => navigateToExtract(heroRecipe.videoId)}
               style={({ pressed }) => [
                 styles.heroCard,
-                { backgroundColor: cardBg, opacity: pressed ? 0.9 : 1 },
+                { opacity: pressed ? 0.85 : 1 },
               ]}
             >
               <Image
-                source={{ uri: recipeOfTheDay.thumbnail }}
-                style={styles.heroImage}
+                source={{ uri: getThumbnailUrl(heroRecipe.videoId) }}
+                style={styles.heroThumbnail}
               />
               <View style={styles.heroContent}>
-                <Text style={[styles.heroTitle, { color: textColor }]} numberOfLines={2}>
-                  {recipeOfTheDay.title}
+                <Text style={styles.heroTitle} numberOfLines={2}>
+                  {heroRecipe.title}
                 </Text>
                 <View style={styles.heroMeta}>
-                  {recipeOfTheDay.cuisine && recipeOfTheDay.cuisine !== 'OTHER' && (
-                    <View style={[styles.heroBadge, { backgroundColor: primaryLightColor as string }]}>
-                      <Text style={[styles.heroBadgeText, { color: primaryColor }]}>
-                        {formatCuisine(recipeOfTheDay.cuisine)}
-                      </Text>
-                    </View>
-                  )}
-                  {recipeOfTheDay.cookTimeMinutes && (
-                    <View style={styles.heroTime}>
-                      <MaterialIcons name="schedule" size={14} color={subtextColor as string} />
-                      <Text style={[styles.heroTimeText, { color: subtextColor }]}>
-                        {recipeOfTheDay.cookTimeMinutes} min
-                      </Text>
-                    </View>
-                  )}
+                  <MaterialIcons name="visibility" size={12} color={colors.textSecondary} />
+                  <Text style={styles.heroMetaText}>
+                    {heroRecipe.timesAccessed} {heroRecipe.timesAccessed === 1 ? 'view' : 'views'}
+                  </Text>
                 </View>
               </View>
             </Pressable>
           </View>
         )}
 
-        {/* Recently Extracted */}
+        {/* Top Recipes */}
+        {topRecipes.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <MaterialIcons name="local-fire-department" size={22} color={colors.accent} />
+              <Text style={styles.sectionTitleInline}>
+                Top Recipes
+              </Text>
+            </View>
+            <FlatList
+              data={topRecipes}
+              horizontal
+              scrollEnabled
+              nestedScrollEnabled
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={(item) => item.videoId}
+              style={styles.horizontalScroll}
+              contentContainerStyle={styles.horizontalList}
+              renderItem={({ item }) => (
+                <Pressable
+                  onPress={() => navigateToExtract(item.videoId)}
+                  style={({ pressed }) => [
+                    styles.topCard,
+                    { opacity: pressed ? 0.85 : 1 },
+                  ]}
+                >
+                  <Image
+                    source={{ uri: getThumbnailUrl(item.videoId) }}
+                    style={styles.topThumbnail}
+                  />
+                  <View style={styles.topInfo}>
+                    <Text style={styles.topName} numberOfLines={2}>
+                      {item.title}
+                    </Text>
+                    <View style={styles.topMeta}>
+                      <MaterialIcons name="visibility" size={12} color={colors.textSecondary} />
+                      <Text style={styles.topCount}>
+                        {item.timesAccessed} {item.timesAccessed === 1 ? 'view' : 'views'}
+                      </Text>
+                    </View>
+                  </View>
+                </Pressable>
+              )}
+            />
+          </View>
+        )}
+
+        {/* Recently Saved */}
         {recentRecipes.length > 0 && (
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: textColor }]}>
-              Recently Extracted
-            </Text>
+            <View style={styles.sectionHeader}>
+              <MaterialIcons name="bookmark" size={20} color={colors.primary} />
+              <Text style={styles.sectionTitleInline}>
+                Recently Saved
+              </Text>
+            </View>
             <FlatList
               data={recentRecipes}
               horizontal
@@ -150,20 +153,19 @@ export default function DiscoverScreen() {
                 <Pressable
                   onPress={() => router.push(`/recipe/${item.id}`)}
                   style={({ pressed }) => [
-                    styles.recentCard,
-                    { backgroundColor: cardBg, opacity: pressed ? 0.85 : 1 },
+                    styles.topCard,
+                    { opacity: pressed ? 0.85 : 1 },
                   ]}
                 >
                   <Image
                     source={{ uri: item.thumbnail }}
-                    style={styles.recentThumbnail}
+                    style={styles.topThumbnail}
                   />
-                  <Text
-                    style={[styles.recentTitle, { color: textColor }]}
-                    numberOfLines={2}
-                  >
-                    {item.title}
-                  </Text>
+                  <View style={styles.topInfo}>
+                    <Text style={styles.topName} numberOfLines={2}>
+                      {item.title}
+                    </Text>
+                  </View>
                 </Pressable>
               )}
             />
@@ -174,8 +176,8 @@ export default function DiscoverScreen() {
         {forYouSuggestions.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <MaterialIcons name="favorite" size={20} color={primaryColor as string} />
-              <Text style={[styles.sectionTitle, { color: textColor, marginBottom: 0 }]}>
+              <MaterialIcons name="favorite" size={20} color={colors.primary} />
+              <Text style={styles.sectionTitleInline}>
                 For You
               </Text>
             </View>
@@ -191,14 +193,11 @@ export default function DiscoverScreen() {
                   onPress={() => navigateToSearch(item.query)}
                   style={({ pressed }) => [
                     styles.suggestionChip,
-                    {
-                      backgroundColor: primaryLightColor as string,
-                      opacity: pressed ? 0.7 : 1,
-                    },
+                    { opacity: pressed ? 0.7 : 1 },
                   ]}
                 >
                   <Text style={styles.suggestionEmoji}>{item.emoji}</Text>
-                  <Text style={[styles.suggestionLabel, { color: primaryColor }]}>
+                  <Text style={styles.suggestionLabel}>
                     {item.label}
                   </Text>
                 </Pressable>
@@ -209,7 +208,7 @@ export default function DiscoverScreen() {
 
         {/* What are you feeling? */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: textColor }]}>
+          <Text style={styles.sectionTitle}>
             What are you feeling?
           </Text>
           <View style={styles.categoryGrid}>
@@ -219,113 +218,17 @@ export default function DiscoverScreen() {
                 onPress={() => navigateToSearch(cat.query)}
                 style={({ pressed }) => [
                   styles.categoryCard,
-                  {
-                    backgroundColor: categoryBg as string,
-                    borderColor: borderColor as string,
-                    opacity: pressed ? 0.7 : 1,
-                  },
+                  { opacity: pressed ? 0.7 : 1 },
                 ]}
               >
                 <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
-                <Text style={[styles.categoryLabel, { color: textColor }]} numberOfLines={1}>
+                <Text style={styles.categoryLabel} numberOfLines={1}>
                   {cat.label}
                 </Text>
               </Pressable>
             ))}
           </View>
         </View>
-
-        {/* Seasonal Picks */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.seasonEmoji}>{season.emoji}</Text>
-            <View>
-              <Text style={[styles.sectionTitle, { color: textColor, marginBottom: 0 }]}>
-                {season.name} Picks
-              </Text>
-              <Text style={[styles.seasonSubtitle, { color: subtextColor }]}>
-                {season.subtitle}
-              </Text>
-            </View>
-          </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.horizontalScroll}
-            contentContainerStyle={styles.horizontalList}
-          >
-            {season.items.map((item) => (
-              <Pressable
-                key={item.label}
-                onPress={() => navigateToSearch(item.query)}
-                style={({ pressed }) => [
-                  styles.seasonalCard,
-                  {
-                    backgroundColor: categoryBg as string,
-                    borderColor: borderColor as string,
-                    opacity: pressed ? 0.7 : 1,
-                  },
-                ]}
-              >
-                <Text style={styles.seasonalEmoji}>{item.emoji}</Text>
-                <Text style={[styles.seasonalLabel, { color: textColor }]}>
-                  {item.label}
-                </Text>
-              </Pressable>
-            ))}
-          </ScrollView>
-        </View>
-
-        {/* Today's Top Recipes */}
-        {popularRecipes.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <MaterialIcons name="local-fire-department" size={22} color={accentColor as string} />
-              <Text style={[styles.sectionTitle, { color: textColor, marginBottom: 0 }]}>
-                Today's Top Recipes
-              </Text>
-            </View>
-            <FlatList
-              data={popularRecipes}
-              horizontal
-              scrollEnabled
-              nestedScrollEnabled
-              showsHorizontalScrollIndicator={false}
-              keyExtractor={(item) => item.videoId}
-              style={styles.horizontalScroll}
-              contentContainerStyle={styles.horizontalList}
-              renderItem={({ item }) => (
-                <Pressable
-                  onPress={() => navigateToExtract(item.videoId)}
-                  style={({ pressed }) => [
-                    styles.popularCard,
-                    { backgroundColor: cardBg, opacity: pressed ? 0.85 : 1 },
-                  ]}
-                >
-                  <Image
-                    source={{ uri: getThumbnailUrl(item.videoId) }}
-                    style={styles.popularThumbnail}
-                  />
-                  <View style={styles.popularInfo}>
-                    <Text
-                      style={[styles.popularName, { color: textColor }]}
-                      numberOfLines={2}
-                    >
-                      {item.title}
-                    </Text>
-                    <View style={styles.popularMeta}>
-                      <MaterialIcons name="visibility" size={12} color={subtextColor as string} />
-                      <Text style={[styles.popularCount, { color: subtextColor }]}>
-                        {item.timesAccessed} {item.timesAccessed === 1 ? 'view' : 'views'}
-                      </Text>
-                    </View>
-                  </View>
-                </Pressable>
-              )}
-            />
-          </View>
-        )}
-
       </ScrollView>
     </View>
   );
@@ -348,37 +251,19 @@ const styles = StyleSheet.create({
   greetingContainer: {
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.lg,
-    paddingBottom: spacing.sm,
+    paddingBottom: spacing.xxl,
   },
   greetingText: {
     fontFamily: f.headingBold,
     fontSize: typography.size['4xl'],
     letterSpacing: -0.3,
+    color: colors.text,
   },
   greetingSubtext: {
     fontFamily: f.body,
     fontSize: typography.size.lg,
     marginTop: spacing.xs,
-  },
-
-  // Trending
-  trendingContainer: {
-    paddingBottom: spacing.xxl,
-  },
-  trendingScroll: {
-    paddingHorizontal: spacing.xl,
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  trendingChip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs + 2,
-    borderRadius: radius.full,
-    borderWidth: 1,
-  },
-  trendingLabel: {
-    fontFamily: f.bodyMedium,
-    fontSize: typography.size.sm,
+    color: colors.textSecondary,
   },
 
   // Sections
@@ -397,69 +282,82 @@ const styles = StyleSheet.create({
     fontSize: typography.size['3xl'],
     letterSpacing: -0.3,
     marginBottom: spacing.lg,
+    color: colors.text,
+  },
+  sectionTitleInline: {
+    fontFamily: f.headingBold,
+    fontSize: typography.size['3xl'],
+    letterSpacing: -0.3,
+    color: colors.text,
   },
 
-  // Hero / Recipe of the Day
+  // Hero (row card matching RecipeCard)
   heroCard: {
-    borderRadius: radius.xl,
+    flexDirection: 'row',
+    borderRadius: radius.lg,
     overflow: 'hidden',
+    backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.borderLight,
   },
-  heroImage: {
-    width: '100%',
-    height: 180,
+  heroThumbnail: {
+    width: 100,
+    height: 80,
   },
   heroContent: {
-    padding: spacing.lg,
-    gap: spacing.sm,
+    flex: 1,
+    padding: spacing.md,
+    justifyContent: 'center',
   },
   heroTitle: {
-    fontFamily: f.headingBold,
-    fontSize: typography.size['2xl'],
-    letterSpacing: -0.2,
+    fontFamily: f.bodySemibold,
+    fontSize: typography.size.lg,
+    marginBottom: spacing.xs,
+    color: colors.text,
   },
   heroMeta: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: spacing.xs,
   },
-  heroBadge: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.sm,
-  },
-  heroBadgeText: {
-    fontFamily: f.bodySemibold,
+  heroMetaText: {
+    fontFamily: f.body,
     fontSize: typography.size.sm,
+    color: colors.textSecondary,
   },
-  heroTime: {
+
+  // Top recipes
+  topCard: {
+    width: 200,
+    borderRadius: radius.lg,
+    overflow: 'hidden',
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+  },
+  topThumbnail: {
+    width: 200,
+    height: 120,
+  },
+  topInfo: {
+    padding: spacing.md,
+    gap: spacing.xs,
+  },
+  topName: {
+    fontFamily: f.bodySemibold,
+    fontSize: typography.size.base,
+    lineHeight: 18,
+    color: colors.text,
+  },
+  topMeta: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
   },
-  heroTimeText: {
-    fontFamily: f.bodyMedium,
+  topCount: {
+    fontFamily: f.body,
     fontSize: typography.size.sm,
-  },
-
-  // Recent recipes
-  recentCard: {
-    width: 140,
-    borderRadius: radius.lg,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-  },
-  recentThumbnail: {
-    width: 140,
-    height: 80,
-  },
-  recentTitle: {
-    fontFamily: f.bodySemibold,
-    fontSize: typography.size.sm,
-    padding: spacing.sm,
-    lineHeight: 16,
+    color: colors.textSecondary,
   },
 
   // For You suggestions
@@ -470,6 +368,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     borderRadius: radius.full,
+    backgroundColor: colors.primaryLight,
   },
   suggestionEmoji: {
     fontSize: 18,
@@ -477,6 +376,7 @@ const styles = StyleSheet.create({
   suggestionLabel: {
     fontFamily: f.bodySemibold,
     fontSize: typography.size.base,
+    color: colors.primary,
   },
 
   // Category grid
@@ -493,6 +393,8 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 1,
     gap: spacing.xs,
+    backgroundColor: colors.categoryBg,
+    borderColor: colors.borderLight,
   },
   categoryEmoji: {
     fontSize: 22,
@@ -501,32 +403,7 @@ const styles = StyleSheet.create({
     fontFamily: f.bodySemibold,
     fontSize: typography.size.xs,
     textAlign: 'center',
-  },
-
-  // Seasonal picks
-  seasonEmoji: {
-    fontSize: 22,
-  },
-  seasonSubtitle: {
-    fontFamily: f.body,
-    fontSize: typography.size.sm,
-    marginTop: 2,
-  },
-  seasonalCard: {
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.xl,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    minWidth: 110,
-  },
-  seasonalEmoji: {
-    fontSize: 28,
-  },
-  seasonalLabel: {
-    fontFamily: f.bodySemibold,
-    fontSize: typography.size.base,
+    color: colors.text,
   },
 
   // Horizontal lists
@@ -536,36 +413,5 @@ const styles = StyleSheet.create({
   horizontalList: {
     gap: spacing.md,
     paddingHorizontal: spacing.xl,
-  },
-
-  // Popular recipes
-  popularCard: {
-    width: 180,
-    borderRadius: radius.lg,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-  },
-  popularThumbnail: {
-    width: 180,
-    height: 100,
-  },
-  popularInfo: {
-    padding: spacing.md,
-    gap: spacing.xs,
-  },
-  popularName: {
-    fontFamily: f.bodySemibold,
-    fontSize: typography.size.base,
-    lineHeight: 18,
-  },
-  popularMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  popularCount: {
-    fontFamily: f.body,
-    fontSize: typography.size.sm,
   },
 });

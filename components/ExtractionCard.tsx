@@ -12,10 +12,8 @@ interface Props {
 const PHASE_CONFIG: Record<ExtractionPhase, { label: string; icon: string; step: number }> = {
   idle: { label: '', icon: '', step: 0 },
   fetching: { label: 'Finding video', icon: 'play-circle-outline', step: 1 },
-  'fetching-transcript': { label: 'Getting transcript', icon: 'subtitles', step: 2 },
-  reading: { label: 'Reading transcript', icon: 'auto-stories', step: 3 },
-  extracting: { label: 'Extracting recipe', icon: 'restaurant', step: 4 },
-  success: { label: 'Recipe ready!', icon: 'check-circle', step: 5 },
+  extracting: { label: 'Extracting recipe', icon: 'restaurant', step: 2 },
+  success: { label: 'Recipe ready!', icon: 'check-circle', step: 3 },
 };
 
 function ShimmerBlock({ width, height, style, shimmerAnim }: {
@@ -98,7 +96,7 @@ export function ExtractionCard({ phase, error }: Props) {
 
   const config = PHASE_CONFIG[phase];
   const isSuccess = phase === 'success';
-  const totalSteps = 4;
+  const totalSteps = 2;
   const currentStep = Math.min(config.step, totalSteps);
 
   return (

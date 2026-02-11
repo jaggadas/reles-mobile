@@ -2,9 +2,7 @@ import { useState, useMemo, useCallback } from 'react';
 import { useRouter, useFocusEffect } from 'expo-router';
 
 import { useAuth } from '@/contexts/AuthContext';
-import { getRandomTrending, type TrendingSearch } from '@/constants/trending';
 import { getSuggestionsForCuisines, type DishSuggestion } from '@/constants/suggestions';
-import { getCurrentSeason, type SeasonConfig } from '@/constants/seasonal';
 import type { Recipe } from '@/lib/types';
 import {
   fetchPopularRecipes,
@@ -23,13 +21,6 @@ function getGreeting(name: string): { greeting: string; subtitle: string } {
   return { greeting: `Late night cooking, ${name}?`, subtitle: "Let's find a midnight snack" };
 }
 
-function getRecipeOfTheDay(recipes: Recipe[]): Recipe | null {
-  if (recipes.length === 0) return null;
-  const now = new Date();
-  const hash = now.getDate() + now.getMonth() * 31 + now.getFullYear() * 366;
-  return recipes[hash % recipes.length];
-}
-
 // ── Hook ─────────────────────────────────────────────────────────
 
 export function useDiscovery() {
@@ -39,14 +30,15 @@ export function useDiscovery() {
   const [popularRecipes, setPopularRecipes] = useState<PopularRecipe[]>([]);
   const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
 
-  const [trendingSearches] = useState<TrendingSearch[]>(() => getRandomTrending(6));
-  const season = useMemo(() => getCurrentSeason(), []);
   const greetingData = useMemo(
     () => getGreeting(user?.name?.split(' ')[0] || 'Chef'),
     [user?.name],
   );
-  const recipeOfTheDay = useMemo(() => getRecipeOfTheDay(savedRecipes), [savedRecipes]);
+
+  const heroRecipe = useMemo(() => popularRecipes[0] ?? null, [popularRecipes]);
+  const topRecipes = useMemo(() => popularRecipes.slice(1), [popularRecipes]);
   const recentRecipes = useMemo(() => savedRecipes.slice(0, 5), [savedRecipes]);
+
   const forYouSuggestions = useMemo<DishSuggestion[]>(() => {
     if (!user?.preferences?.likedCuisines?.length) return [];
     return getSuggestionsForCuisines(user.preferences.likedCuisines, 8);
@@ -56,7 +48,7 @@ export function useDiscovery() {
   useFocusEffect(
     useCallback(() => {
       getAllRecipes().then(setSavedRecipes);
-      fetchPopularRecipes(5).then(setPopularRecipes);
+      fetchPopularRecipes(8).then(setPopularRecipes);
     }, []),
   );
 
@@ -82,12 +74,10 @@ export function useDiscovery() {
 
   return {
     greetingData,
-    trendingSearches,
-    season,
-    recipeOfTheDay,
+    heroRecipe,
+    topRecipes,
     recentRecipes,
     forYouSuggestions,
-    popularRecipes,
     navigateToSearch,
     navigateToExtract,
     getThumbnailUrl,

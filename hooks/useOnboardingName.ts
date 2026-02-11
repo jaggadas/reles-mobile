@@ -8,6 +8,7 @@ export function useOnboardingName() {
   const params = useLocalSearchParams<{ email: string }>();
   const { register } = useAuth();
 
+  const [email, setEmail] = useState(params.email ?? "");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -24,7 +25,7 @@ export function useOnboardingName() {
 
     setLoading(true);
     try {
-      await register(params.email!, password, name.trim());
+      await register(email.trim().toLowerCase(), password, name.trim());
       router.push("/(auth)/onboarding-dietary");
     } catch (err: any) {
       Alert.alert("Registration failed", err.message || "Something went wrong");
@@ -33,12 +34,19 @@ export function useOnboardingName() {
     }
   };
 
+  const handleBack = () => {
+    router.back();
+  };
+
   return {
+    email,
+    setEmail,
     name,
     setName,
     password,
     setPassword,
     loading,
     handleContinue,
+    handleBack,
   };
 }

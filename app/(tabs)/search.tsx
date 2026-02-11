@@ -100,52 +100,29 @@ export default function SearchScreen() {
         </Pressable>
       </View>
 
-      {/* Diet filter */}
-      <View style={styles.dietFilterRow}>
-        {DIET_FILTERS.map((f) => {
-          const active = dietFilter === f.value;
-          return (
-            <Pressable
-              key={f.value}
-              onPress={() => setDietFilter(active ? 'all' : f.value)}
-              style={[
-                styles.dietFilterButton,
-                { backgroundColor: active ? f.activeBg : colors.categoryBg, borderColor: active ? f.activeBorder : colors.borderLight },
-              ]}
-            >
-              <MaterialIcons name={f.icon} size={14} color={active ? f.activeColor : (subtextColor as string)} />
-              <Text style={[styles.dietFilterLabel, { color: active ? f.activeColor : subtextColor }]}>
-                {f.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
-
-      {/* Extraction quota banner */}
-      <View style={[styles.quotaBanner, !isPro && styles.quotaBannerFree]}>
-        <View style={styles.quotaLeft}>
-          <View style={styles.quotaCountRow}>
-            <Text style={styles.quotaCount}>{remainingExtractions}</Text>
-            <Text style={styles.quotaOf}>/{weeklyLimit}</Text>
-          </View>
-          <Text style={[styles.quotaLabel, { color: subtextColor }]}>
-            {isPro ? 'recipes left · Pro' : isTrialActive ? 'recipes left · Trial' : 'recipes left this week'}
-          </Text>
+      {/* Diet filter – hidden during extraction */}
+      {phase === 'idle' && (
+        <View style={styles.dietFilterRow}>
+          {DIET_FILTERS.map((f) => {
+            const active = dietFilter === f.value;
+            return (
+              <Pressable
+                key={f.value}
+                onPress={() => setDietFilter(active ? 'all' : f.value)}
+                style={[
+                  styles.dietFilterButton,
+                  { backgroundColor: active ? f.activeBg : colors.categoryBg, borderColor: active ? f.activeBorder : colors.borderLight },
+                ]}
+              >
+                <MaterialIcons name={f.icon} size={14} color={active ? f.activeColor : (subtextColor as string)} />
+                <Text style={[styles.dietFilterLabel, { color: active ? f.activeColor : subtextColor }]}>
+                  {f.label}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
-        {!isPro && (
-          <Pressable
-            onPress={() => showPaywall()}
-            style={({ pressed }) => [
-              styles.quotaUpgradeButton,
-              { opacity: pressed ? 0.85 : 1 },
-            ]}
-          >
-            <MaterialIcons name="bolt" size={16} color="#FFFFFF" />
-            <Text style={styles.quotaUpgradeText}>Go Pro</Text>
-          </Pressable>
-        )}
-      </View>
+      )}
 
       {/* Loading state */}
       {isSearching && (
@@ -203,6 +180,31 @@ export default function SearchScreen() {
                 </Pressable>
               ))}
             </View>
+          </View>
+
+          {/* Extraction quota banner */}
+          <View style={[styles.quotaBanner, !isPro && styles.quotaBannerFree]}>
+            <View style={styles.quotaLeft}>
+              <View style={styles.quotaCountRow}>
+                <Text style={styles.quotaCount}>{remainingExtractions}</Text>
+                <Text style={styles.quotaOf}>/{weeklyLimit}</Text>
+              </View>
+              <Text style={[styles.quotaLabel, { color: subtextColor }]}>
+                {isPro ? 'recipes left · Pro' : isTrialActive ? 'recipes left · Trial' : 'recipes left this week'}
+              </Text>
+            </View>
+            {!isPro && (
+              <Pressable
+                onPress={() => showPaywall()}
+                style={({ pressed }) => [
+                  styles.quotaUpgradeButton,
+                  { opacity: pressed ? 0.85 : 1 },
+                ]}
+              >
+                <MaterialIcons name="bolt" size={16} color="#FFFFFF" />
+                <Text style={styles.quotaUpgradeText}>Go Pro</Text>
+              </Pressable>
+            )}
           </View>
         </ScrollView>
       )}
@@ -279,8 +281,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginHorizontal: spacing.xl,
-    marginBottom: spacing.md,
+    marginTop: spacing.xl,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     backgroundColor: colors.surface,

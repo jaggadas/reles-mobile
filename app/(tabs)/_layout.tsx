@@ -1,10 +1,8 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Image } from 'expo-image';
 import { Tabs } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
-
 import { HapticTab } from '@/components/haptic-tab';
-import { colors, palette, shadows, typography } from '@/constants/colors';
+import { colors, shadows, typography } from '@/constants/colors';
 
 export default function TabLayout() {
   return (
@@ -59,21 +57,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="add"
         options={{
-          title: 'Add',
-          headerShown: false,
-          tabBarIcon: () => null,
-          tabBarButton: () => (
-            <View style={styles.fabWrapper}>
-              <Pressable
-                style={styles.fab}
-                onPress={() => {
-                  // TODO: handle add action
-                }}
-              >
-                <MaterialIcons name="add" size={32} color={palette.white} />
-              </Pressable>
-            </View>
-          ),
+          href: null,
         }}
       />
       <Tabs.Screen
@@ -98,26 +82,3 @@ export default function TabLayout() {
   );
 }
 
-const FAB_SIZE = 60;
-
-const styles = StyleSheet.create({
-  fabWrapper: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  fab: {
-    width: FAB_SIZE,
-    height: FAB_SIZE,
-    borderRadius: FAB_SIZE / 2,
-    backgroundColor: palette.darkTeal,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: -28,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-});
