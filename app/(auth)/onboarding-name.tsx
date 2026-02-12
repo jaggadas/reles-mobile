@@ -54,7 +54,7 @@ export default function OnboardingNameScreen() {
       >
         <View style={styles.illustrationSection}>
           <Image
-            source={require("@/assets/illustrations/lets get to know you.png")}
+            source={require("@/assets/illustrations/lets-get-to-know-you.png")}
             style={styles.illustrationImage}
             resizeMode="contain"
           />

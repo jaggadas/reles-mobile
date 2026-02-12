@@ -8,17 +8,17 @@ export type FeatureSlide = {
 
 export const FEATURE_SLIDES: FeatureSlide[] = [
   {
-    image: require("@/assets/illustrations/saved to served.png"),
+    image: require("@/assets/illustrations/saved-to-served.png"),
     title: "From Saved to Served",
     subtitle: "Turn any YouTube cooking video into a beautiful, step-by-step recipe.",
   },
   {
-    image: require("@/assets/illustrations/extract recipes.png"),
+    image: require("@/assets/illustrations/extract-recipes.png"),
     title: "Extract Recipes",
     subtitle: "Paste a link, and we'll pull out ingredients, steps, and timings for you.",
   },
   {
-    image: require("@/assets/illustrations/save and organize.png"),
+    image: require("@/assets/illustrations/save-and-organize.png"),
     title: "Save & Organize",
     subtitle: "Build your personal cookbook. Search, filter, and cook anytime you want.",
   },
