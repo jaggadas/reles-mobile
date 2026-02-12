@@ -11,7 +11,7 @@
     "ios": {
       "supportsTablet": true,
       "appGroupIdentifier": "group.com.reles.mobile",
-      "bundleIdentifier": "com.anonymous.relesmobile"
+      "bundleIdentifier": "com.reles.app"
     },
     "android": {
       "adaptiveIcon": {
