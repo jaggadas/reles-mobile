@@ -73,13 +73,23 @@ export interface VideoSearchResult {
   videoId: string;
   title: string;
   channelName: string;
+  channelThumbnail?: string;
   thumbnail: string;
   url: string;
   /** Total view count when available from the provider */
   viewCount?: number;
 }
 
-export type ExtractionPhase = "idle" | "fetching" | "fetching-transcript" | "reading" | "extracting" | "success";
+export type ExtractionPhase = "idle" | "fetching" | "extracting" | "success";
+
+export interface StreamingExtractionCallbacks {
+  onPhase: (phase: ExtractionPhase) => void;
+  onMetadata: (fields: Record<string, unknown>) => void;
+  onIngredient: (ingredient: Ingredient) => void;
+  onInstruction: (index: number, text: string) => void;
+  onComplete: (recipe: ExtractedRecipe) => void;
+  onError: (message: string) => void;
+}
 
 export type AisleCategory =
   | "produce"

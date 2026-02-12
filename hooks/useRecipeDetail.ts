@@ -4,7 +4,14 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 
 import type { Recipe, VideoSearchResult } from '@/lib/types';
-import { getRecipeById, updateRecipe, deleteRecipe } from '@/lib/storage';
+import {
+  getRecipeById,
+  updateRecipe,
+  deleteRecipe,
+  addRecipeToGroceryList,
+  removeRecipeFromGroceryList,
+  isRecipeInGroceryList,
+} from '@/lib/storage';
 import { createInstacartRecipeLink, searchRecipeVideos } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -17,6 +24,7 @@ export function useRecipeDetail() {
   const [instacartLoading, setInstacartLoading] = useState(false);
   const [relatedVideos, setRelatedVideos] = useState<VideoSearchResult[]>([]);
   const [loadingRelated, setLoadingRelated] = useState(false);
+  const [inGroceryList, setInGroceryList] = useState(false);
 
   const { user } = useAuth();
 
@@ -26,6 +34,7 @@ export function useRecipeDetail() {
     if (r) {
       setRecipe(r);
       setTitle(r.title);
+      setInGroceryList(await isRecipeInGroceryList(r.id));
     }
   }, [id]);
 
@@ -92,6 +101,17 @@ export function useRecipeDetail() {
     userAllergens.includes(a.toLowerCase())
   );
 
+  async function handleToggleGroceryList() {
+    if (!recipe) return;
+    if (inGroceryList) {
+      await removeRecipeFromGroceryList(recipe.id);
+      setInGroceryList(false);
+    } else {
+      await addRecipeToGroceryList(recipe.id);
+      setInGroceryList(true);
+    }
+  }
+
   function handleDelete() {
     if (!recipe) return;
     Alert.alert(
@@ -137,6 +157,8 @@ export function useRecipeDetail() {
     intersectingAllergens,
     handleTitleBlur,
     handleInstacart,
+    inGroceryList,
+    handleToggleGroceryList,
     handleDelete,
     handleUpdateIngredient,
     handleUpdateInstruction,

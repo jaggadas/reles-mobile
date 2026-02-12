@@ -43,6 +43,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: typography.size['3xl'],
     fontFamily: f.headingBold,
+    fontVariant: ['no-common-ligatures'],
     textAlign: 'center',
   },
   subtitle: {

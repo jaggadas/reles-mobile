@@ -1,32 +1,13 @@
-import { Tabs, useRouter } from 'expo-router';
-import React from 'react';
-import { Platform, Pressable, Alert } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Image } from 'expo-image';
-
+import { Tabs } from 'expo-router';
+import { StyleSheet, Text, View } from 'react-native';
 import { HapticTab } from '@/components/haptic-tab';
 import { colors, typography } from '@/constants/colors';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 
 export default function TabLayout() {
-  const { logout } = useAuth();
-  const router = useRouter();
-
-  const doLogout = async () => {
-    await logout();
-    router.replace('/(auth)/login');
-  };
-
-  const handleLogout = () => {
-    if (Platform.OS === 'web') {
-      doLogout();
-      return;
-    }
-    Alert.alert('Log out', 'Are you sure you want to log out?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Log out', style: 'destructive', onPress: doLogout },
-    ]);
-  };
+  const { isPro } = useSubscription();
 
   return (
     <Tabs
@@ -34,8 +15,13 @@ export default function TabLayout() {
         tabBarActiveTintColor: colors.tint,
         tabBarInactiveTintColor: colors.tabIconDefault,
         tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopColor: colors.borderLight,
+          position: 'absolute',
+          backgroundColor: '#FFFFFF',
+          borderTopWidth: 1,
+          borderTopColor: colors.border,
+          height: 88,
+          paddingTop: 8,
+          elevation: 0,
         },
         headerStyle: {
           backgroundColor: colors.surface,
@@ -44,43 +30,89 @@ export default function TabLayout() {
         headerTitleStyle: {
           fontFamily: typography.family.headingBold,
         },
-        tabBarLabelStyle: {
-          fontFamily: typography.family.bodySemibold,
-          fontSize: typography.size.xs,
-        },
+        tabBarShowLabel: false,
         headerShown: true,
         tabBarButton: HapticTab,
-        headerRight: () => (
-          <Pressable onPress={handleLogout} style={{ marginRight: 16 }}>
-            <MaterialIcons name="logout" size={22} color={colors.textSecondary} />
-          </Pressable>
-        ),
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          headerTitle: () => (
-            <Image
-              source={require('@/assets/images/Reles.svg')}
-              style={{ width: 80, height: 28 }}
-              contentFit="contain"
-            />
+          title: 'Discover',
+          headerShown: false,
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="home" size={28} color={color} />
           ),
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="search" size={size} color={color} />
-          ),
+        }}
+      />
+      <Tabs.Screen
+        name="search"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="add"
+        options={{
+          href: null,
         }}
       />
       <Tabs.Screen
         name="recipes"
         options={{
           title: 'Recipes',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="menu-book" size={size} color={color} />
+          headerShown: false,
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="bookmark" size={28} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="grocery"
+        options={{
+          title: 'List',
+          headerShown: false,
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="shopping-cart" size={28} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          headerShown: false,
+          tabBarIcon: ({ color }) => (
+            <View>
+              <MaterialIcons name="person" size={28} color={color} />
+              {isPro && (
+                <View style={styles.proBadge}>
+                  <Text style={styles.proBadgeText}>PRO</Text>
+                </View>
+              )}
+            </View>
           ),
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  proBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -12,
+    backgroundColor: '#8B1A1A',
+    borderRadius: 6,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+  },
+  proBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 8,
+    fontFamily: typography.family.bodySemibold,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+});
+

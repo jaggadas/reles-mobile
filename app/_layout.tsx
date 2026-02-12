@@ -68,7 +68,7 @@ function RootNavigator() {
 
     const videoId = extractVideoId(sharedText);
     if (videoId) {
-      router.navigate({ pathname: '/(tabs)', params: { url: sharedText } });
+      router.push({ pathname: '/recipe/preview', params: { videoId } } as any);
     }
     resetShareIntent();
   }, [hasShareIntent, status]);
@@ -100,6 +100,10 @@ function RootNavigator() {
           options={{ headerShown: false, gestureEnabled: false }}
         />
         <Stack.Screen
+          name="recipe/preview"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
           name="recipe/[id]"
           options={{
             title: 'Recipe',
@@ -115,8 +119,8 @@ function RootNavigator() {
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
-    'Typewriter': require('../assets/fonts/AmericanTypewriter-01.ttf'),
-    'Napzer': require('../assets/fonts/Napzer-Regular.ttf'),
+    'HedvigLettersSerif': require('../assets/fonts/HedvigLettersSerif-Regular.ttf'),
+    'HedvigLettersSans': require('../assets/fonts/HedvigLettersSans-Regular.ttf'),
   });
 
   if (!fontsLoaded) {

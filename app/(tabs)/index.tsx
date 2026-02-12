@@ -1,9 +1,10 @@
+import { Image } from 'expo-image';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import React from 'react';
+import React, { useRef, useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  Image,
+  Keyboard,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -11,819 +12,461 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 
-import { ExtractionCard } from '@/components/ExtractionCard';
-import { VideoSearchResults } from '@/components/VideoSearchResults';
 import { colors, radius, spacing, typography } from '@/constants/colors';
-import { EXPLORE_CATEGORIES } from '@/constants/explore-categories';
-import { useSubscription } from '@/contexts/SubscriptionContext';
-import { useRecipeSearch, type DietFilter } from '@/hooks/useRecipeSearch';
-import { formatCuisine } from '@/lib/format';
+import {
+  GreetingSection,
+  PickedForYouSection,
+  TrendingCuisineSection,
+  QuickTonightSection,
+  ContinueJourneySection,
+  CuisineDeepDiveSection,
+  ChallengeSection,
+  MoodCategoriesSection,
+  RecentlySavedSection,
+} from '@/components/home';
+import { useDiscovery } from '@/hooks/useDiscovery';
+import type { VideoSearchResult } from '@/lib/types';
+import {
+  extractVideoId,
+  searchRecipeVideos,
+} from '@/lib/api';
 
-// ── Diet filter config ────────────────────────────────────────────
+const PARCHMENT = '#FFFFFF';
+const f = typography.family;
 
-const DIET_FILTERS: {
-  value: DietFilter;
-  label: string;
-  icon: React.ComponentProps<typeof MaterialIcons>['name'];
-  activeBg: string;
-  activeBorder: string;
-  activeColor: string;
-}[] = [
-  { value: 'veg',    label: 'Veg',     icon: 'eco',        activeBg: '#E8F5E9', activeBorder: '#A5D6A7', activeColor: '#2E7D32' },
-  { value: 'nonveg', label: 'Non-Veg', icon: 'restaurant', activeBg: '#FBE9E7', activeBorder: '#FFAB91', activeColor: '#BF360C' },
-  { value: 'vegan',  label: 'Vegan',   icon: 'spa',        activeBg: '#E0F2F1', activeBorder: '#80CBC4', activeColor: '#00695C' },
-];
+// ── Search Result Card (matches saved recipe style) ──────────
+
+function SearchResultCard({
+  result,
+  onPress,
+}: {
+  result: VideoSearchResult;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.resultCard,
+        pressed && { opacity: 0.7 },
+      ]}
+    >
+      <View style={styles.resultThumbnailWrapper}>
+        {result.thumbnail ? (
+          <Image
+            source={{ uri: result.thumbnail }}
+            style={{ width: '150%', height: '150%' }}
+            contentFit="cover"
+          />
+        ) : (
+          <MaterialIcons name="play-circle-outline" size={20} color={colors.textMuted} />
+        )}
+      </View>
+      <View style={styles.resultCardContent}>
+        <Text style={styles.resultCardTitle} numberOfLines={2}>
+          {result.title}
+        </Text>
+        <Text style={styles.resultCardChannel} numberOfLines={1}>
+          {result.channelName}
+        </Text>
+      </View>
+    </Pressable>
+  );
+}
 
 // ── Component ────────────────────────────────────────────────────
 
-export default function HomeScreen() {
+export default function DiscoverScreen() {
   const {
-    query,
-    setQuery,
-    searchResults,
-    setSearchResults,
-    phase,
-    error,
-    setError,
-    isSearching,
-    dietFilter,
-    setDietFilter,
-    inputRef,
     greetingData,
-    trendingSearches,
-    season,
-    recipeOfTheDay,
+    feedLoading,
+    pickedForYouVideos,
+    trendingSection,
+    quickTonightRecipes,
+    accompanyingSuggestions,
+    deepDiveSection,
+    challengeRecipes,
+    moodCategories,
     recentRecipes,
-    forYouSuggestions,
-    popularRecipes,
-    showIdle,
-    handleSearch,
-    handleSelectVideo,
-    handlePopularPress,
-    handleCategoryPress,
-    router,
-    getThumbnailUrl,
-  } = useRecipeSearch();
+    navigateToPreview,
+    getCuisineEmoji,
+    getCuisineName,
+    router: discoveryRouter,
+  } = useDiscovery();
 
-  const { remainingExtractions, weeklyLimit, isPro, isTrialActive, showPaywall } = useSubscription();
+  const router = useRouter();
+  const params = useLocalSearchParams<{ search?: string; _t?: string }>();
+  const tabBarHeight = useBottomTabBarHeight();
+  const { top: safeTop } = useSafeAreaInsets();
 
-  // ── Colors ──
-  const bgColor = colors.background;
-  const textColor = colors.text;
-  const subtextColor = colors.textSecondary;
-  const inputBg = colors.inputBackground;
-  const placeholderColor = colors.textMuted;
-  const primaryColor = colors.primary;
-  const primaryTextColor = colors.textOnPrimary;
-  const primaryLightColor = colors.primaryLight;
-  const cardBg = colors.card;
-  const accentColor = colors.accent;
-  const categoryBg = colors.categoryBg;
-  const borderColor = colors.borderLight;
+  // ── Search state ──
+  const [query, setQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<VideoSearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const inputRef = useRef<TextInput>(null);
+  const lastSearchKey = useRef<string | null>(null);
+  const skipNextDebounce = useRef(false);
 
-  return (
-    <SafeAreaView edges={['bottom']} style={[styles.container, { backgroundColor: bgColor }]}>
-      {/* Greeting */}
-      <View style={styles.greetingContainer}>
-        <Text style={[styles.greetingText, { color: textColor }]}>
-          {greetingData.greeting}
-        </Text>
-        <Text style={[styles.greetingSubtext, { color: subtextColor }]}>
-          {greetingData.subtitle}
-        </Text>
+  const hasSearchContent = query.trim().length > 0 || searchResults.length > 0 || isSearching;
+
+  // Handle search param from other screens
+  useEffect(() => {
+    const key = params._t ? `${params.search}_${params._t}` : params.search;
+    if (params.search && key !== lastSearchKey.current) {
+      lastSearchKey.current = key ?? null;
+      skipNextDebounce.current = true;
+      setQuery(params.search);
+      doSearch(params.search);
+    }
+  }, [params.search, params._t]);
+
+  // Debounced auto-search
+  useEffect(() => {
+    if (skipNextDebounce.current) {
+      skipNextDebounce.current = false;
+      return;
+    }
+
+    const trimmed = query.trim();
+    if (!trimmed) {
+      setSearchResults([]);
+      setSearchError(null);
+      return;
+    }
+
+    if (extractVideoId(trimmed)) return;
+    if (trimmed.length < 3) return;
+
+    const timer = setTimeout(() => {
+      doSearch(trimmed);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  const doSearch = useCallback(
+    async (searchQuery?: string) => {
+      const trimmed = (searchQuery ?? query).trim();
+      if (!trimmed) return;
+
+      setSearchError(null);
+      setSearchResults([]);
+
+      const videoId = extractVideoId(trimmed);
+      if (videoId) {
+        Keyboard.dismiss();
+        router.push({
+          pathname: '/recipe/preview',
+          params: { videoId },
+        } as any);
+        return;
+      }
+
+      setIsSearching(true);
+      try {
+        const results = await searchRecipeVideos(trimmed);
+        setSearchResults(results);
+        if (results.length === 0) {
+          setSearchError('No videos found. Try a different search.');
+        }
+      } catch (err) {
+        setSearchError(err instanceof Error ? err.message : 'Search failed');
+      } finally {
+        setIsSearching(false);
+      }
+    },
+    [query, router],
+  );
+
+  const handleSelectVideo = useCallback(
+    (result: VideoSearchResult) => {
+      router.push({
+        pathname: '/recipe/preview',
+        params: {
+          videoId: result.videoId,
+          title: result.title,
+          channelName: result.channelName,
+          thumbnail: result.thumbnail,
+        },
+      } as any);
+    },
+    [router],
+  );
+
+  const handleClearQuery = useCallback(() => {
+    setQuery('');
+    setSearchResults([]);
+    setSearchError(null);
+  }, []);
+
+  // ── Header (shared between discovery and search views) ──
+
+  const headerContent = (
+    <View style={styles.headerBorder}>
+      <View style={[styles.header, { paddingTop: safeTop + spacing.lg }]}>
+        <Image
+          source={require('@/assets/illustrations/extract recipes.png')}
+          style={styles.headerIllustration}
+          contentFit="cover"
+        />
+        <Image
+          source={require('@/assets/images/Reles.svg')}
+          style={styles.logo}
+          contentFit="contain"
+          tintColor="#FFFFFF"
+        />
+        <GreetingSection
+          greeting={greetingData}
+          query={query}
+          onChangeQuery={setQuery}
+          onSubmitSearch={() => doSearch()}
+          onClearQuery={handleClearQuery}
+          inputRef={inputRef}
+        />
       </View>
+    </View>
+  );
 
-      {/* Search bar */}
-      <View style={styles.searchContainer}>
-        <View style={[styles.inputWrapper, { backgroundColor: inputBg, borderColor: borderColor as string }]}>
-          <MaterialIcons name="search" size={20} color={placeholderColor as string} />
-          <TextInput
-            ref={inputRef}
-            style={[styles.input, { color: textColor }]}
-            placeholder="Paste URL or search recipes..."
-            placeholderTextColor={placeholderColor as string}
-            value={query}
-            onChangeText={setQuery}
-            onSubmitEditing={() => handleSearch()}
-            returnKeyType="search"
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-          {query.length > 0 && (
-            <Pressable onPress={() => { setQuery(''); setSearchResults([]); setError(null); }}>
-              <MaterialIcons name="close" size={20} color={placeholderColor as string} />
-            </Pressable>
+  // ── Search results view ──
+
+  if (hasSearchContent) {
+    return (
+      <View style={styles.container}>
+        <FlatList
+          data={searchResults}
+          keyExtractor={(item) => item.videoId}
+          ListHeaderComponent={
+            <>
+              {headerContent}
+              {isSearching && (
+                <View style={styles.searchLoadingContainer}>
+                  <ActivityIndicator size="small" color={colors.primary} />
+                  <Text style={styles.searchLoadingText}>Searching recipes...</Text>
+                </View>
+              )}
+              {searchError && searchResults.length === 0 && !isSearching && (
+                <View style={styles.searchLoadingContainer}>
+                  <MaterialIcons name="search-off" size={32} color={colors.textMuted} />
+                  <Text style={styles.searchLoadingText}>{searchError}</Text>
+                </View>
+              )}
+              {searchResults.length > 0 && (
+                <View style={styles.searchResultsHeader}>
+                  <Text style={styles.searchResultsCount}>
+                    {searchResults.length} result{searchResults.length !== 1 ? 's' : ''}
+                  </Text>
+                </View>
+              )}
+            </>
+          }
+          renderItem={({ item }) => (
+            <SearchResultCard result={item} onPress={() => handleSelectVideo(item)} />
           )}
-        </View>
-        <Pressable
-          onPress={() => handleSearch()}
-          style={[styles.searchButton, { backgroundColor: primaryColor }]}
-        >
-          <MaterialIcons name="arrow-forward" size={20} color={primaryTextColor as string} />
-        </Pressable>
-      </View>
-
-      {/* Diet filter */}
-      <View style={styles.dietFilterRow}>
-        {DIET_FILTERS.map((f) => {
-          const active = dietFilter === f.value;
-          return (
-            <Pressable
-              key={f.value}
-              onPress={() => setDietFilter(active ? 'all' : f.value)}
-              style={[
-                styles.dietFilterButton,
-                { backgroundColor: active ? f.activeBg : colors.categoryBg, borderColor: active ? f.activeBorder : colors.borderLight },
-              ]}
-            >
-              <MaterialIcons name={f.icon} size={14} color={active ? f.activeColor : (subtextColor as string)} />
-              <Text style={[styles.dietFilterLabel, { color: active ? f.activeColor : subtextColor }]}>
-                {f.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
-
-      {/* Extraction quota banner */}
-      <View style={[styles.quotaBanner, !isPro && styles.quotaBannerFree]}>
-        <View style={styles.quotaLeft}>
-          <View style={styles.quotaCountRow}>
-            <Text style={styles.quotaCount}>{remainingExtractions}</Text>
-            <Text style={styles.quotaOf}>/{weeklyLimit}</Text>
-          </View>
-          <Text style={[styles.quotaLabel, { color: subtextColor }]}>
-            {isPro ? 'recipes left · Pro' : isTrialActive ? 'recipes left · Trial' : 'recipes left this week'}
-          </Text>
-        </View>
-        {!isPro && (
-          <Pressable
-            onPress={() => showPaywall()}
-            style={({ pressed }) => [
-              styles.quotaUpgradeButton,
-              { opacity: pressed ? 0.85 : 1 },
-            ]}
-          >
-            <MaterialIcons name="bolt" size={16} color="#FFFFFF" />
-            <Text style={styles.quotaUpgradeText}>Go Pro</Text>
-          </Pressable>
-        )}
-      </View>
-
-      {/* Trending searches (only when idle) */}
-      {showIdle && (
-        <View style={styles.trendingContainer}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.trendingScroll}>
-            <MaterialIcons name="trending-up" size={16} color={subtextColor as string} style={{ marginRight: 6 }} />
-            {trendingSearches.map((item) => (
-              <Pressable
-                key={item.label}
-                onPress={() => handleCategoryPress(item.query)}
-                style={({ pressed }) => [
-                  styles.trendingChip,
-                  {
-                    backgroundColor: categoryBg as string,
-                    borderColor: borderColor as string,
-                    opacity: pressed ? 0.7 : 1,
-                  },
-                ]}
-              >
-                <Text style={[styles.trendingLabel, { color: subtextColor }]}>{item.label}</Text>
-              </Pressable>
-            ))}
-          </ScrollView>
-        </View>
-      )}
-
-      {/* Loading state */}
-      {isSearching && (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={primaryColor as string} />
-          <Text style={[styles.loadingText, { color: subtextColor }]}>Searching recipes...</Text>
-        </View>
-      )}
-
-      {/* Extraction card */}
-      <ExtractionCard phase={phase} error={error} />
-
-      {/* Search results */}
-      {searchResults.length > 0 && phase === 'idle' && (
-        <VideoSearchResults results={searchResults} onSelect={handleSelectVideo} />
-      )}
-
-      {/* Idle state: all sections */}
-      {showIdle && (
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: tabBarHeight + spacing.xxl },
+          ]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
-        >
-          {/* Recipe of the Day */}
-          {recipeOfTheDay && (
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <MaterialIcons name="auto-awesome" size={20} color={primaryColor as string} />
-                <Text style={[styles.sectionTitle, { color: textColor, marginBottom: 0 }]}>
-                  Recipe of the Day
-                </Text>
-              </View>
-              <Pressable
-                onPress={() => router.push(`/recipe/${recipeOfTheDay.id}`)}
-                style={({ pressed }) => [
-                  styles.heroCard,
-                  { backgroundColor: cardBg, opacity: pressed ? 0.9 : 1 },
-                ]}
-              >
-                <Image
-                  source={{ uri: recipeOfTheDay.thumbnail }}
-                  style={styles.heroImage}
-                />
-                <View style={styles.heroContent}>
-                  <Text style={[styles.heroTitle, { color: textColor }]} numberOfLines={2}>
-                    {recipeOfTheDay.title}
-                  </Text>
-                  <View style={styles.heroMeta}>
-                    {recipeOfTheDay.cuisine && recipeOfTheDay.cuisine !== 'OTHER' && (
-                      <View style={[styles.heroBadge, { backgroundColor: primaryLightColor as string }]}>
-                        <Text style={[styles.heroBadgeText, { color: primaryColor }]}>
-                          {formatCuisine(recipeOfTheDay.cuisine)}
-                        </Text>
-                      </View>
-                    )}
-                    {recipeOfTheDay.cookTimeMinutes && (
-                      <View style={styles.heroTime}>
-                        <MaterialIcons name="schedule" size={14} color={subtextColor as string} />
-                        <Text style={[styles.heroTimeText, { color: subtextColor }]}>
-                          {recipeOfTheDay.cookTimeMinutes} min
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                </View>
-              </Pressable>
-            </View>
-          )}
+        />
+      </View>
+    );
+  }
 
-          {/* Recently Extracted */}
-          {recentRecipes.length > 0 && (
-            <View style={styles.section}>
-              <Text style={[styles.sectionTitle, { color: textColor }]}>
-                Recently Extracted
-              </Text>
-              <FlatList
-                data={recentRecipes}
-                horizontal
-                scrollEnabled
-                nestedScrollEnabled
-                showsHorizontalScrollIndicator={false}
-                keyExtractor={(item) => item.id}
-                style={styles.horizontalScroll}
-                contentContainerStyle={styles.horizontalList}
-                renderItem={({ item }) => (
-                  <Pressable
-                    onPress={() => router.push(`/recipe/${item.id}`)}
-                    style={({ pressed }) => [
-                      styles.recentCard,
-                      { backgroundColor: cardBg, opacity: pressed ? 0.85 : 1 },
-                    ]}
-                  >
-                    <Image
-                      source={{ uri: item.thumbnail }}
-                      style={styles.recentThumbnail}
-                    />
-                    <Text
-                      style={[styles.recentTitle, { color: textColor }]}
-                      numberOfLines={2}
-                    >
-                      {item.title}
-                    </Text>
-                  </Pressable>
-                )}
-              />
-            </View>
-          )}
+  // ── Discovery view (default) ──
 
-          {/* For You */}
-          {forYouSuggestions.length > 0 && (
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <MaterialIcons name="favorite" size={20} color={primaryColor as string} />
-                <Text style={[styles.sectionTitle, { color: textColor, marginBottom: 0 }]}>
-                  For You
-                </Text>
-              </View>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.horizontalScroll}
-                contentContainerStyle={styles.horizontalList}
-              >
-                {forYouSuggestions.map((item) => (
-                  <Pressable
-                    key={item.label}
-                    onPress={() => handleCategoryPress(item.query)}
-                    style={({ pressed }) => [
-                      styles.suggestionChip,
-                      {
-                        backgroundColor: primaryLightColor as string,
-                        opacity: pressed ? 0.7 : 1,
-                      },
-                    ]}
-                  >
-                    <Text style={styles.suggestionEmoji}>{item.emoji}</Text>
-                    <Text style={[styles.suggestionLabel, { color: primaryColor }]}>
-                      {item.label}
-                    </Text>
-                  </Pressable>
-                ))}
-              </ScrollView>
-            </View>
-          )}
+  return (
+    <View style={styles.container}>
+      <ScrollView
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: tabBarHeight + spacing.xxl }]}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {headerContent}
 
-          {/* What are you feeling? */}
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: textColor }]}>
-              What are you feeling?
-            </Text>
-            <View style={styles.categoryGrid}>
-              {EXPLORE_CATEGORIES.map((cat) => (
-                <Pressable
-                  key={cat.id}
-                  onPress={() => handleCategoryPress(cat.query)}
-                  style={({ pressed }) => [
-                    styles.categoryCard,
-                    {
-                      backgroundColor: categoryBg as string,
-                      borderColor: borderColor as string,
-                      opacity: pressed ? 0.7 : 1,
-                    },
-                  ]}
-                >
-                  <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
-                  <Text style={[styles.categoryLabel, { color: textColor }]} numberOfLines={1}>
-                    {cat.label}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
+        {feedLoading && (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="small" color={colors.primary} />
           </View>
+        )}
 
-          {/* Seasonal Picks */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.seasonEmoji}>{season.emoji}</Text>
-              <View>
-                <Text style={[styles.sectionTitle, { color: textColor, marginBottom: 0 }]}>
-                  {season.name} Picks
-                </Text>
-                <Text style={[styles.seasonSubtitle, { color: subtextColor }]}>
-                  {season.subtitle}
-                </Text>
-              </View>
-            </View>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.horizontalScroll}
-              contentContainerStyle={styles.horizontalList}
-            >
-              {season.items.map((item) => (
-                <Pressable
-                  key={item.label}
-                  onPress={() => handleCategoryPress(item.query)}
-                  style={({ pressed }) => [
-                    styles.seasonalCard,
-                    {
-                      backgroundColor: categoryBg as string,
-                      borderColor: borderColor as string,
-                      opacity: pressed ? 0.7 : 1,
-                    },
-                  ]}
-                >
-                  <Text style={styles.seasonalEmoji}>{item.emoji}</Text>
-                  <Text style={[styles.seasonalLabel, { color: textColor }]}>
-                    {item.label}
-                  </Text>
-                </Pressable>
-              ))}
-            </ScrollView>
-          </View>
+        {pickedForYouVideos.length > 0 && (
+          <PickedForYouSection
+            videos={pickedForYouVideos}
+            onVideoPress={navigateToPreview}
+          />
+        )}
 
-          {/* Today's Top Recipes */}
-          {popularRecipes.length > 0 && (
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <MaterialIcons name="local-fire-department" size={22} color={accentColor as string} />
-                <Text style={[styles.sectionTitle, { color: textColor, marginBottom: 0 }]}>
-                  Today's Top Recipes
-                </Text>
-              </View>
-              <FlatList
-                data={popularRecipes}
-                horizontal
-                scrollEnabled
-                nestedScrollEnabled
-                showsHorizontalScrollIndicator={false}
-                keyExtractor={(item) => item.videoId}
-                style={styles.horizontalScroll}
-                contentContainerStyle={styles.horizontalList}
-                renderItem={({ item }) => (
-                  <Pressable
-                    onPress={() => handlePopularPress(item)}
-                    style={({ pressed }) => [
-                      styles.popularCard,
-                      { backgroundColor: cardBg, opacity: pressed ? 0.85 : 1 },
-                    ]}
-                  >
-                    <Image
-                      source={{ uri: getThumbnailUrl(item.videoId) }}
-                      style={styles.popularThumbnail}
-                    />
-                    <View style={styles.popularInfo}>
-                      <Text
-                        style={[styles.popularName, { color: textColor }]}
-                        numberOfLines={2}
-                      >
-                        {item.title}
-                      </Text>
-                      <View style={styles.popularMeta}>
-                        <MaterialIcons name="visibility" size={12} color={subtextColor as string} />
-                        <Text style={[styles.popularCount, { color: subtextColor }]}>
-                          {item.timesAccessed} {item.timesAccessed === 1 ? 'view' : 'views'}
-                        </Text>
-                      </View>
-                    </View>
-                  </Pressable>
-                )}
-              />
-            </View>
-          )}
+        {trendingSection.cuisine && trendingSection.recipes.length > 0 && (
+          <TrendingCuisineSection
+            cuisine={trendingSection.cuisine}
+            cuisineName={getCuisineName(trendingSection.cuisine)}
+            cuisineEmoji={getCuisineEmoji(trendingSection.cuisine)}
+            recipes={trendingSection.recipes}
+            onRecipePress={navigateToPreview}
+          />
+        )}
 
-          <View style={{ height: spacing['3xl'] }} />
-        </ScrollView>
-      )}
-    </SafeAreaView>
+        {quickTonightRecipes.length > 0 && (
+          <QuickTonightSection
+            recipes={quickTonightRecipes}
+            onRecipePress={navigateToPreview}
+          />
+        )}
+
+        {deepDiveSection.cuisine && deepDiveSection.recipes.length > 0 && (
+          <CuisineDeepDiveSection
+            cuisineName={getCuisineName(deepDiveSection.cuisine)}
+            cuisineEmoji={getCuisineEmoji(deepDiveSection.cuisine)}
+            recipes={deepDiveSection.recipes}
+            onRecipePress={navigateToPreview}
+          />
+        )}
+
+        {challengeRecipes.length > 0 && (
+          <ChallengeSection
+            recipes={challengeRecipes}
+            onRecipePress={navigateToPreview}
+          />
+        )}
+
+        {accompanyingSuggestions.length > 0 && (
+          <ContinueJourneySection
+            suggestions={accompanyingSuggestions}
+            onSuggestionPress={(q: string) => {
+              setQuery(q);
+              doSearch(q);
+            }}
+          />
+        )}
+
+        {recentRecipes.length > 0 && (
+          <RecentlySavedSection
+            recipes={recentRecipes}
+            onRecipePress={(id) => discoveryRouter.push(`/recipe/${id}`)}
+          />
+        )}
+
+        <MoodCategoriesSection
+          categories={moodCategories}
+          onCategoryPress={(q: string) => {
+            setQuery(q);
+            doSearch(q);
+          }}
+        />
+      </ScrollView>
+    </View>
   );
 }
 
 // ── Styles ────────────────────────────────────────────────────────
 
-const f = typography.family;
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: PARCHMENT,
   },
-
-  // Greeting
-  greetingContainer: {
+  scrollContent: {
+    flexGrow: 1,
+  },
+  headerBorder: {
+    backgroundColor: '#E5CCA9',
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    paddingBottom: 1,
+    marginBottom: 24,
+  },
+  header: {
+    backgroundColor: '#8B1A1A',
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.sm,
+    paddingBottom: spacing.xl,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    overflow: 'hidden' as const,
   },
-  greetingText: {
-    fontFamily: f.headingBold,
-    fontSize: typography.size['4xl'],
-    letterSpacing: -0.3,
+  headerIllustration: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 80,
+    right: 0,
+    bottom: 0,
+    opacity: 1,
   },
-  greetingSubtext: {
-    fontFamily: f.body,
-    fontSize: typography.size.lg,
-    marginTop: spacing.xs,
-  },
-
-  // Search
-  searchContainer: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
-  },
-  dietFilterRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.xl,
-    paddingBottom: spacing.md,
-  },
-  dietFilterButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.xs,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.full,
-    borderWidth: 1,
-  },
-  dietFilterLabel: {
-    fontFamily: f.bodySemibold,
-    fontSize: typography.size.sm,
-  },
-  inputWrapper: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    paddingHorizontal: spacing.md,
+  logo: {
+    width: 140,
     height: 48,
-    gap: spacing.sm,
+    marginLeft: -24,
   },
-  input: {
-    flex: 1,
-    fontFamily: f.body,
-    fontSize: typography.size.lg,
-    height: '100%',
-  },
-  searchButton: {
-    borderRadius: radius.lg,
-    height: 48,
-    width: 48,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  // Quota banner
-  quotaBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginHorizontal: spacing.xl,
-    marginBottom: spacing.md,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-  },
-  quotaBannerFree: {
-    backgroundColor: '#FFFAF6',
-    borderColor: colors.primary,
-  },
-  quotaLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  quotaCountRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-  },
-  quotaCount: {
-    fontFamily: f.headingBold,
-    fontSize: typography.size['2xl'],
-    color: colors.primary,
-  },
-  quotaOf: {
-    fontFamily: f.body,
-    fontSize: typography.size.base,
-    color: colors.primary,
-    opacity: 0.6,
-  },
-  quotaLabel: {
-    fontFamily: f.body,
-    fontSize: typography.size.sm,
-  },
-  quotaUpgradeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.full,
-    backgroundColor: colors.primary,
-  },
-  quotaUpgradeText: {
-    fontFamily: f.bodySemibold,
-    fontSize: typography.size.base,
-    color: '#FFFFFF',
-  },
-
-  // Trending
-  trendingContainer: {
-    paddingBottom: spacing.md,
-  },
-  trendingScroll: {
-    paddingHorizontal: spacing.xl,
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  trendingChip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs + 2,
-    borderRadius: radius.full,
-    borderWidth: 1,
-  },
-  trendingLabel: {
-    fontFamily: f.bodyMedium,
-    fontSize: typography.size.sm,
-  },
-
-  // Loading
   loadingContainer: {
+    paddingVertical: spacing.lg,
+    alignItems: 'center',
+  },
+
+  // ── Search Results ──
+  searchLoadingContainer: {
     alignItems: 'center',
     paddingVertical: spacing['3xl'],
     gap: spacing.md,
   },
-  loadingText: {
+  searchLoadingText: {
     fontFamily: f.body,
     fontSize: typography.size.lg,
+    color: colors.textSecondary,
   },
-
-  // Scroll
-  scrollContent: {
-    flexGrow: 1,
-  },
-
-  // Sections
-  section: {
+  searchResultsHeader: {
     paddingHorizontal: spacing.xl,
-    marginBottom: spacing.xxl,
+    marginBottom: spacing.md,
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginBottom: spacing.lg,
-  },
-  sectionTitle: {
-    fontFamily: f.headingBold,
-    fontSize: typography.size['3xl'],
-    letterSpacing: -0.3,
-    marginBottom: spacing.lg,
+  searchResultsCount: {
+    fontFamily: f.body,
+    fontSize: typography.size.sm,
+    color: colors.textSecondary,
   },
 
-  // Hero / Recipe of the Day
-  heroCard: {
-    borderRadius: radius.xl,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-  },
-  heroImage: {
-    width: '100%',
-    height: 180,
-  },
-  heroContent: {
-    padding: spacing.lg,
-    gap: spacing.sm,
-  },
-  heroTitle: {
-    fontFamily: f.headingBold,
-    fontSize: typography.size['2xl'],
-    letterSpacing: -0.2,
-  },
-  heroMeta: {
+  // ── Search Result Card (matches saved recipe style) ──
+  resultCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
-  },
-  heroBadge: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.sm,
-  },
-  heroBadgeText: {
-    fontFamily: f.bodySemibold,
-    fontSize: typography.size.sm,
-  },
-  heroTime: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  heroTimeText: {
-    fontFamily: f.bodyMedium,
-    fontSize: typography.size.sm,
-  },
-
-  // Recent recipes
-  recentCard: {
-    width: 140,
+    marginHorizontal: spacing.xl,
+    marginBottom: spacing.lg,
+    paddingLeft: 80 + spacing.lg,
+    backgroundColor: colors.card,
     borderRadius: radius.lg,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: colors.borderLight,
   },
-  recentThumbnail: {
-    width: 140,
-    height: 80,
-  },
-  recentTitle: {
-    fontFamily: f.bodySemibold,
-    fontSize: typography.size.sm,
-    padding: spacing.sm,
-    lineHeight: 16,
-  },
-
-  // For You suggestions
-  suggestionChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderRadius: radius.full,
-  },
-  suggestionEmoji: {
-    fontSize: 18,
-  },
-  suggestionLabel: {
-    fontFamily: f.bodySemibold,
-    fontSize: typography.size.base,
-  },
-
-  // Category grid
-  categoryGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  categoryCard: {
-    width: '23%',
-    alignItems: 'center',
+  resultThumbnailWrapper: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 80,
+    overflow: 'hidden',
+    backgroundColor: colors.background,
     justifyContent: 'center',
-    paddingVertical: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    gap: spacing.xs,
-  },
-  categoryEmoji: {
-    fontSize: 22,
-  },
-  categoryLabel: {
-    fontFamily: f.bodySemibold,
-    fontSize: typography.size.xs,
-    textAlign: 'center',
-  },
-
-  // Seasonal picks
-  seasonEmoji: {
-    fontSize: 22,
-  },
-  seasonSubtitle: {
-    fontFamily: f.body,
-    fontSize: typography.size.sm,
-    marginTop: 2,
-  },
-  seasonalCard: {
     alignItems: 'center',
-    gap: spacing.sm,
+  },
+  resultCardContent: {
+    flex: 1,
     paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.xl,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    minWidth: 110,
-  },
-  seasonalEmoji: {
-    fontSize: 28,
-  },
-  seasonalLabel: {
-    fontFamily: f.bodySemibold,
-    fontSize: typography.size.base,
-  },
-
-  // Horizontal lists
-  horizontalScroll: {
-    marginHorizontal: -spacing.xl,
-  },
-  horizontalList: {
-    gap: spacing.md,
-    paddingHorizontal: spacing.xl,
-  },
-
-  // Popular recipes
-  popularCard: {
-    width: 180,
-    borderRadius: radius.lg,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-  },
-  popularThumbnail: {
-    width: 180,
-    height: 100,
-  },
-  popularInfo: {
-    padding: spacing.md,
+    paddingRight: spacing.lg,
     gap: spacing.xs,
   },
-  popularName: {
+  resultCardTitle: {
     fontFamily: f.bodySemibold,
-    fontSize: typography.size.base,
-    lineHeight: 18,
+    fontSize: typography.size.lg,
+    color: colors.text,
+    lineHeight: 21,
   },
-  popularMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  popularCount: {
+  resultCardChannel: {
     fontFamily: f.body,
-    fontSize: typography.size.sm,
+    fontSize: typography.size.xs,
+    color: colors.textSecondary,
   },
 });

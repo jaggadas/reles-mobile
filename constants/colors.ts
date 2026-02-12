@@ -122,12 +122,12 @@ export const radius = {
 // ─── Typography ────────────────────────────────────────────────
 export const typography = {
   family: {
-    heading: 'Typewriter',
-    headingBold: 'Typewriter',
-    body: 'Napzer',
-    bodyMedium: 'Napzer',
-    bodySemibold: 'Napzer',
-    bodyBold: 'Napzer',
+    heading: 'HedvigLettersSerif',
+    headingBold: 'HedvigLettersSerif',
+    body: 'HedvigLettersSans',
+    bodyMedium: 'HedvigLettersSans',
+    bodySemibold: 'HedvigLettersSans',
+    bodyBold: 'HedvigLettersSans',
   } as const,
   size: {
     xs: 11,

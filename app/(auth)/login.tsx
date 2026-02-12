@@ -25,7 +25,6 @@ export default function LoginScreen() {
     passwordHeight,
     passwordOpacity,
     handleContinue,
-    handleRegister,
   } = useLoginForm();
 
   return (
@@ -87,11 +86,6 @@ export default function LoginScreen() {
             size="lg"
           />
 
-          <Button
-            title="Create an account"
-            onPress={handleRegister}
-            variant="ghost"
-          />
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
