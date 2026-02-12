@@ -22,7 +22,7 @@ import { PaywallModal } from "@/components/PaywallModal";
 import { useAuth } from "@/contexts/AuthContext";
 
 // ── API Keys ──
-const TEST_STORE_API_KEY = "test_rMIgNOxmHQJtUdLVluZMmkekEdD";
+const PRODUCTION_KEYS = { apple: "appl_hIsGqZRomubNlgOOyfcBBAVFrQg"} 
 
 interface SubscriptionContextValue {
   isPro: boolean;
@@ -52,7 +52,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         if (__DEV__) {
           Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
         }
-        await Purchases.configure({ apiKey: TEST_STORE_API_KEY });
+        await Purchases.configure({ apiKey: PRODUCTION_KEYS.apple });
       } catch (e) {
         console.warn("RevenueCat init error:", e);
       } finally {
