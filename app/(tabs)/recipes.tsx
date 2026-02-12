@@ -3,6 +3,7 @@ import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import {
+  ActivityIndicator,
   FlatList,
   Pressable,
   StyleSheet,
@@ -98,9 +99,25 @@ function SavedRecipeCard({
 
 export default function RecipesScreen() {
   const router = useRouter();
-  const { recipes, grocerySet, toggleGrocery } = useRecipeList();
+  const { recipes, loading, grocerySet, toggleGrocery } = useRecipeList();
   const tabBarHeight = useBottomTabBarHeight();
   const { top: safeTop } = useSafeAreaInsets();
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <View style={[styles.pageHeader, { paddingTop: safeTop + spacing.xl }]}>
+          <View style={styles.sectionTitleRow}>
+            <Text style={styles.sectionTitle}>Saved Recipes</Text>
+            <View style={styles.rule} />
+          </View>
+        </View>
+        <View style={styles.loaderContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      </View>
+    );
+  }
 
   if (recipes.length === 0) {
     return (
@@ -257,5 +274,10 @@ const styles = StyleSheet.create({
   },
   groceryButtonActive: {
     backgroundColor: colors.success,
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, useNavigation } from 'expo-router';
 
 import { colors, radius, spacing, typography } from '@/constants/colors';
 import {
@@ -114,6 +114,13 @@ export default function DiscoverScreen() {
 
   const hasSearchContent = query.trim().length > 0 || searchResults.length > 0 || isSearching;
 
+  // Refocus input after view switches from ScrollView to FlatList (which remounts the TextInput)
+  useEffect(() => {
+    if (hasSearchContent) {
+      setTimeout(() => inputRef.current?.focus(), 50);
+    }
+  }, [hasSearchContent]);
+
   // Handle search param from other screens
   useEffect(() => {
     const key = params._t ? `${params.search}_${params._t}` : params.search;
@@ -203,6 +210,16 @@ export default function DiscoverScreen() {
     setSearchResults([]);
     setSearchError(null);
   }, []);
+
+  // Clear search when home tab is pressed
+  const navigation = useNavigation();
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('tabPress', () => {
+      handleClearQuery();
+      Keyboard.dismiss();
+    });
+    return unsubscribe;
+  }, [navigation, handleClearQuery]);
 
   // ── Header (shared between discovery and search views) ──
 
