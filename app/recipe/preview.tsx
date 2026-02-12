@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TextInput,
   Pressable,
   Linking,
   Dimensions,
@@ -26,13 +25,11 @@ import { useRecipeExtraction } from '@/hooks/useRecipeExtraction';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { formatDifficulty, formatCuisine, formatAllergens, formatTime } from '@/lib/format';
 import {
-  updateRecipe,
-  deleteRecipe,
   addRecipeToGroceryList,
   removeRecipeFromGroceryList,
   isRecipeInGroceryList,
 } from '@/lib/storage';
-import { createInstacartRecipeLink } from '@/lib/api';
+import { createInstacartRecipeLink, apiUnsaveRecipe } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Recipe } from '@/lib/types';
 
@@ -55,37 +52,15 @@ function SectionHeader({ title, count }: { title: string; count?: number }) {
 }
 
 // ── Recipe Detail (inline after extraction) ───────────────────
-function RecipeDetail({ recipe: initialRecipe }: { recipe: Recipe }) {
+function RecipeDetail({ recipe }: { recipe: Recipe }) {
   const router = useRouter();
   const { user } = useAuth();
-
-  const [recipe, setRecipe] = useState(initialRecipe);
-  const [title, setTitle] = useState(recipe.title);
 
   const userAllergens = user?.preferences?.allergens ?? [];
   const recipeAllergens = recipe.allergens ?? [];
   const intersectingAllergens = recipeAllergens.filter((a) =>
     userAllergens.includes(a.toLowerCase()),
   );
-
-  async function handleTitleBlur() {
-    if (title === recipe.title) return;
-    await updateRecipe(recipe.id, { title });
-  }
-
-  async function handleUpdateIngredient(index: number, field: 'name' | 'quantity', value: string) {
-    const updated = [...recipe.ingredients];
-    updated[index] = { ...updated[index], [field]: value };
-    await updateRecipe(recipe.id, { ingredients: updated });
-    setRecipe({ ...recipe, ingredients: updated });
-  }
-
-  async function handleUpdateInstruction(index: number, value: string) {
-    const updated = [...recipe.instructions];
-    updated[index] = value;
-    await updateRecipe(recipe.id, { instructions: updated });
-    setRecipe({ ...recipe, instructions: updated });
-  }
 
   return (
     <Animated.View entering={FadeIn.duration(400)}>
@@ -175,20 +150,8 @@ function RecipeDetail({ recipe: initialRecipe }: { recipe: Recipe }) {
             <View key={i} style={styles.ingredientRow}>
               <View style={styles.ingredientBullet} />
               <View style={styles.ingredientContent}>
-                <TextInput
-                  style={styles.ingredientQuantity}
-                  value={ing.quantity}
-                  onChangeText={(v) => handleUpdateIngredient(i, 'quantity', v)}
-                  placeholder="Qty"
-                  placeholderTextColor={colors.textMuted}
-                />
-                <TextInput
-                  style={styles.ingredientName}
-                  value={ing.name}
-                  onChangeText={(v) => handleUpdateIngredient(i, 'name', v)}
-                  placeholder="Ingredient"
-                  placeholderTextColor={colors.textMuted}
-                />
+                <Text style={styles.ingredientQuantity}>{ing.quantity}</Text>
+                <Text style={styles.ingredientName}>{ing.name}</Text>
               </View>
             </View>
           ))}
@@ -205,12 +168,7 @@ function RecipeDetail({ recipe: initialRecipe }: { recipe: Recipe }) {
                 <View style={styles.stepNumber}>
                   <Text style={styles.stepNumberText}>{i + 1}</Text>
                 </View>
-                <TextInput
-                  style={styles.instructionText}
-                  value={step}
-                  onChangeText={(v) => handleUpdateInstruction(i, v)}
-                  multiline
-                />
+                <Text style={styles.instructionText}>{step}</Text>
               </View>
             ))}
           </View>
@@ -331,17 +289,17 @@ export default function RecipePreviewScreen() {
 
   React.useEffect(() => {
     if (savedRecipe) {
-      isRecipeInGroceryList(savedRecipe.id).then(setInGroceryList);
+      isRecipeInGroceryList(savedRecipe.videoId).then(setInGroceryList);
     }
-  }, [savedRecipe?.id]);
+  }, [savedRecipe?.videoId]);
 
   async function handleToggleGroceryList() {
     if (!savedRecipe) return;
     if (inGroceryList) {
-      await removeRecipeFromGroceryList(savedRecipe.id);
+      await removeRecipeFromGroceryList(savedRecipe.videoId);
       setInGroceryList(false);
     } else {
-      await addRecipeToGroceryList(savedRecipe.id);
+      await addRecipeToGroceryList(savedRecipe.videoId);
       setInGroceryList(true);
     }
   }
@@ -357,7 +315,7 @@ export default function RecipePreviewScreen() {
           text: 'Delete',
           style: 'destructive',
           onPress: async () => {
-            await deleteRecipe(savedRecipe.id);
+            await apiUnsaveRecipe(savedRecipe.videoId);
             router.back();
           },
         },

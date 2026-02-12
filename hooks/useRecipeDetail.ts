@@ -5,14 +5,16 @@ import * as WebBrowser from 'expo-web-browser';
 
 import type { Recipe, VideoSearchResult } from '@/lib/types';
 import {
-  getRecipeById,
-  updateRecipe,
-  deleteRecipe,
   addRecipeToGroceryList,
   removeRecipeFromGroceryList,
   isRecipeInGroceryList,
 } from '@/lib/storage';
-import { createInstacartRecipeLink, searchRecipeVideos } from '@/lib/api';
+import {
+  createInstacartRecipeLink,
+  searchRecipeVideos,
+  apiGetSavedRecipe,
+  apiUnsaveRecipe,
+} from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 
 export function useRecipeDetail() {
@@ -20,7 +22,6 @@ export function useRecipeDetail() {
   const router = useRouter();
 
   const [recipe, setRecipe] = useState<Recipe | null>(null);
-  const [title, setTitle] = useState('');
   const [instacartLoading, setInstacartLoading] = useState(false);
   const [relatedVideos, setRelatedVideos] = useState<VideoSearchResult[]>([]);
   const [loadingRelated, setLoadingRelated] = useState(false);
@@ -30,11 +31,10 @@ export function useRecipeDetail() {
 
   const loadRecipe = useCallback(async () => {
     if (!id) return;
-    const r = await getRecipeById(id);
+    const r = await apiGetSavedRecipe(id);
     if (r) {
       setRecipe(r);
-      setTitle(r.title);
-      setInGroceryList(await isRecipeInGroceryList(r.id));
+      setInGroceryList(await isRecipeInGroceryList(r.videoId));
     }
   }, [id]);
 
@@ -67,12 +67,6 @@ export function useRecipeDetail() {
     };
   }, [recipe]);
 
-  async function handleTitleBlur() {
-    if (!recipe || title === recipe.title) return;
-    await updateRecipe(recipe.id, { title });
-    await loadRecipe();
-  }
-
   async function handleInstacart() {
     if (!recipe) return;
     setInstacartLoading(true);
@@ -104,10 +98,10 @@ export function useRecipeDetail() {
   async function handleToggleGroceryList() {
     if (!recipe) return;
     if (inGroceryList) {
-      await removeRecipeFromGroceryList(recipe.id);
+      await removeRecipeFromGroceryList(recipe.videoId);
       setInGroceryList(false);
     } else {
-      await addRecipeToGroceryList(recipe.id);
+      await addRecipeToGroceryList(recipe.videoId);
       setInGroceryList(true);
     }
   }
@@ -123,7 +117,7 @@ export function useRecipeDetail() {
           text: 'Delete',
           style: 'destructive',
           onPress: async () => {
-            await deleteRecipe(recipe.id);
+            await apiUnsaveRecipe(recipe.videoId);
             router.back();
           },
         },
@@ -131,37 +125,21 @@ export function useRecipeDetail() {
     );
   }
 
-  async function handleUpdateIngredient(index: number, field: 'name' | 'quantity', value: string) {
-    if (!recipe) return;
-    const updated = [...recipe.ingredients];
-    updated[index] = { ...updated[index], [field]: value };
-    await updateRecipe(recipe.id, { ingredients: updated });
-    setRecipe({ ...recipe, ingredients: updated });
-  }
-
-  async function handleUpdateInstruction(index: number, value: string) {
-    if (!recipe) return;
-    const updated = [...recipe.instructions];
-    updated[index] = value;
-    await updateRecipe(recipe.id, { instructions: updated });
-    setRecipe({ ...recipe, instructions: updated });
-  }
-
   return {
     recipe,
-    title,
-    setTitle,
+    title: recipe?.title ?? '',
+    setTitle: () => {},
     instacartLoading,
     relatedVideos,
     loadingRelated,
     intersectingAllergens,
-    handleTitleBlur,
+    handleTitleBlur: () => {},
     handleInstacart,
     inGroceryList,
     handleToggleGroceryList,
     handleDelete,
-    handleUpdateIngredient,
-    handleUpdateInstruction,
+    handleUpdateIngredient: () => {},
+    handleUpdateInstruction: () => {},
     router,
   };
 }

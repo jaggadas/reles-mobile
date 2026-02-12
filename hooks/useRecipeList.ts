@@ -3,11 +3,11 @@ import { useFocusEffect } from 'expo-router';
 
 import type { Recipe } from '@/lib/types';
 import {
-  getAllRecipes,
   addRecipeToGroceryList,
   removeRecipeFromGroceryList,
   isRecipeInGroceryList,
 } from '@/lib/storage';
+import { apiGetSavedRecipes } from '@/lib/api';
 
 export function useRecipeList() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -20,23 +20,23 @@ export function useRecipeList() {
   );
 
   async function loadData() {
-    const allRecipes = await getAllRecipes();
+    const allRecipes = await apiGetSavedRecipes();
     setRecipes(allRecipes);
 
     const inGrocery = new Set<string>();
     for (const r of allRecipes) {
-      if (await isRecipeInGroceryList(r.id)) {
-        inGrocery.add(r.id);
+      if (await isRecipeInGroceryList(r.videoId)) {
+        inGrocery.add(r.videoId);
       }
     }
     setGrocerySet(inGrocery);
   }
 
   async function toggleGrocery(recipe: Recipe) {
-    if (grocerySet.has(recipe.id)) {
-      await removeRecipeFromGroceryList(recipe.id);
+    if (grocerySet.has(recipe.videoId)) {
+      await removeRecipeFromGroceryList(recipe.videoId);
     } else {
-      await addRecipeToGroceryList(recipe.id);
+      await addRecipeToGroceryList(recipe.videoId);
     }
     await loadData();
   }

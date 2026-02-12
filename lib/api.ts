@@ -2,6 +2,7 @@ import type {
   ExtractedRecipe,
   GroceryItem,
   Ingredient,
+  Recipe,
   StreamingExtractionCallbacks,
   VideoDetails,
   VideoSearchResult,
@@ -460,6 +461,51 @@ export async function apiMigrateSubscriptionData(data: {
   });
   if (!response.ok) throw new Error("Failed to migrate subscription data");
   return response.json();
+}
+
+// ── Saved Recipes API ────────────────────────────────────────
+
+export async function apiSaveRecipe(videoId: string): Promise<{ savedAt: string }> {
+  const response = await authFetch(`${API_BASE_URL}/api/user/recipes/${videoId}`, {
+    method: "POST",
+  });
+  if (!response.ok) {
+    const data = await response.json().catch(() => null);
+    throw new Error(data?.error ?? "Failed to save recipe");
+  }
+  return response.json();
+}
+
+export async function apiUnsaveRecipe(videoId: string): Promise<void> {
+  const response = await authFetch(`${API_BASE_URL}/api/user/recipes/${videoId}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) {
+    const data = await response.json().catch(() => null);
+    throw new Error(data?.error ?? "Failed to delete recipe");
+  }
+}
+
+export async function apiGetSavedRecipes(): Promise<Recipe[]> {
+  const response = await authFetch(`${API_BASE_URL}/api/user/recipes`);
+  if (!response.ok) throw new Error("Failed to fetch recipes");
+  const data = await response.json();
+  return data.recipes ?? [];
+}
+
+export async function apiGetSavedRecipe(videoId: string): Promise<Recipe | null> {
+  const response = await authFetch(`${API_BASE_URL}/api/user/recipes/${videoId}`);
+  if (response.status === 404) return null;
+  if (!response.ok) throw new Error("Failed to fetch recipe");
+  const data = await response.json();
+  return data.recipe ?? null;
+}
+
+export async function apiCheckRecipeSaved(videoId: string): Promise<boolean> {
+  const response = await authFetch(`${API_BASE_URL}/api/user/recipes/check/${videoId}`);
+  if (!response.ok) return false;
+  const data = await response.json();
+  return data.saved ?? false;
 }
 
 // ── Popular Recipes ───────────────────────────────────────────

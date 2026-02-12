@@ -7,8 +7,10 @@ import {
   fetchVideoDetails,
   extractIngredientsStream,
   getThumbnailUrl,
+  apiCheckRecipeSaved,
+  apiSaveRecipe,
+  apiGetSavedRecipe,
 } from '@/lib/api';
-import { insertRecipe, findRecipeByVideoId, getRecipeById } from '@/lib/storage';
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -69,13 +71,11 @@ export function useRecipeExtraction(
     let cancelled = false;
 
     (async () => {
-      // Check local storage for existing recipe
-      const existing = await findRecipeByVideoId(videoId);
-      if (existing && !cancelled) {
+      // Check server for existing saved recipe
+      const saved = await apiCheckRecipeSaved(videoId);
+      if (saved && !cancelled) {
         setAlreadySaved(true);
-        setExistingRecipeId(existing.id);
-        if (!videoTitle) setVideoTitle(existing.title);
-        if (!channelTitle) setChannelTitle(existing.channelTitle ?? null);
+        setExistingRecipeId(videoId);
       }
 
       // Fetch fresh metadata from API
@@ -164,24 +164,8 @@ export function useRecipeExtraction(
       const extracted = result.value;
       if (cancelledRef.current || !extracted) return;
 
-      const id = await insertRecipe({
-        videoId,
-        title: extracted.title || videoTitle || 'Untitled Recipe',
-        videoTitle: videoTitle || extracted.title,
-        channelTitle: channelTitle || undefined,
-        thumbnail: getThumbnailUrl(videoId),
-        url: `https://www.youtube.com/watch?v=${videoId}`,
-        ingredients: extracted.ingredients,
-        instructions: extracted.instructions,
-        servings: extracted.servings,
-        prepTimeMinutes: extracted.prepTimeMinutes,
-        cookTimeMinutes: extracted.cookTimeMinutes,
-        allergens: extracted.allergens,
-        caloriesKcal: extracted.caloriesKcal,
-        difficulty: extracted.difficulty,
-        cuisine: extracted.cuisine,
-        accompanyingRecipes: extracted.accompanyingRecipes,
-      });
+      // Save recipe reference to user's saved_recipes on server
+      await apiSaveRecipe(videoId);
 
       // Deduct quota only after successful extraction + save
       try {
@@ -190,13 +174,13 @@ export function useRecipeExtraction(
         // Deduction failed but recipe is saved — don't block the user
       }
 
-      // Load the full recipe and show it inline
-      const recipe = await getRecipeById(id);
+      // Load the full assembled recipe from server and show it inline
+      const recipe = await apiGetSavedRecipe(videoId);
       if (!cancelledRef.current) {
         setPhase('idle');
         setSavedRecipe(recipe);
         setAlreadySaved(true);
-        setExistingRecipeId(id);
+        setExistingRecipeId(videoId);
       }
     } catch (err) {
       if (!cancelledRef.current) {

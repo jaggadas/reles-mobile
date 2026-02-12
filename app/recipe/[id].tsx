@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TextInput,
   Pressable,
   Linking,
   ActivityIndicator,
@@ -145,13 +144,7 @@ export default function RecipeDetailScreen() {
           {/* Content area */}
           <View style={styles.contentArea}>
             {/* Title */}
-            <TextInput
-              style={styles.title}
-              value={title}
-              onChangeText={setTitle}
-              onBlur={handleTitleBlur}
-              multiline
-            />
+            <Text style={styles.title}>{title}</Text>
 
             {/* Channel name */}
             {recipe.channelTitle ? (
@@ -244,20 +237,8 @@ export default function RecipeDetailScreen() {
                   <View key={i} style={styles.ingredientRow}>
                     <View style={styles.ingredientBullet} />
                     <View style={styles.ingredientContent}>
-                      <TextInput
-                        style={styles.ingredientQuantity}
-                        value={ing.quantity}
-                        onChangeText={(v) => handleUpdateIngredient(i, 'quantity', v)}
-                        placeholder="Qty"
-                        placeholderTextColor={colors.textMuted}
-                      />
-                      <TextInput
-                        style={styles.ingredientName}
-                        value={ing.name}
-                        onChangeText={(v) => handleUpdateIngredient(i, 'name', v)}
-                        placeholder="Ingredient"
-                        placeholderTextColor={colors.textMuted}
-                      />
+                      <Text style={styles.ingredientQuantity}>{ing.quantity}</Text>
+                      <Text style={styles.ingredientName}>{ing.name}</Text>
                     </View>
                   </View>
                 ))}
@@ -275,12 +256,7 @@ export default function RecipeDetailScreen() {
                       <View style={styles.stepNumber}>
                         <Text style={styles.stepNumberText}>{i + 1}</Text>
                       </View>
-                      <TextInput
-                        style={styles.instructionText}
-                        value={step}
-                        onChangeText={(v) => handleUpdateInstruction(i, v)}
-                        multiline
-                      />
+                      <Text style={styles.instructionText}>{step}</Text>
                     </View>
                   ))}
                 </View>

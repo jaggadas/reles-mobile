@@ -14,7 +14,7 @@ import {
   type FeedRecipe,
   type VideoSearchResult,
 } from '@/lib/api';
-import { getAllRecipes } from '@/lib/storage';
+import { apiGetSavedRecipes } from '@/lib/api';
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -264,8 +264,8 @@ export function useDiscovery() {
 
   useFocusEffect(
     useCallback(() => {
-      // Load local recipes
-      getAllRecipes().then(setSavedRecipes);
+      // Load saved recipes from server
+      apiGetSavedRecipes().then(setSavedRecipes);
 
       // Load server feed
       setFeedLoading(true);
