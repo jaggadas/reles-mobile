@@ -182,10 +182,7 @@ export default function ProfileScreen() {
             />
           </View>
 
-          <Text style={styles.extractionHint}>
-            {remainingExtractions} extraction
-            {remainingExtractions !== 1 ? 's' : ''} remaining
-          </Text>
+     
 
           {!isPro && (
             <Button
