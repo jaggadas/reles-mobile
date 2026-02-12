@@ -10,7 +10,6 @@ import {
   apiSavePreferences,
 } from "@/lib/auth";
 import { clearAllUserData } from "@/lib/storage";
-import { clearLocalSubscriptionFlags } from "@/lib/subscription";
 
 interface AuthContextValue {
   user: UserProfile | null;
@@ -79,7 +78,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await Promise.all([
       clearAuthToken(),
       clearAllUserData(),
-      clearLocalSubscriptionFlags(),
     ]);
     setToken(null);
     setUser(null);

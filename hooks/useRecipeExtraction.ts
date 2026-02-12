@@ -120,7 +120,7 @@ export function useRecipeExtraction(
       const purchased = await showPaywall();
       if (!purchased) {
         setError(
-          `You've reached your weekly limit of ${weeklyLimit} recipes. Upgrade to Pro for more.`,
+          `You've reached your limit of ${weeklyLimit} recipes. Upgrade to Pro for more.`,
         );
         return;
       }

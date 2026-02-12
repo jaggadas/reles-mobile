@@ -24,7 +24,7 @@ import { useSubscription } from '@/contexts/SubscriptionContext';
 
 export default function ProfileScreen() {
   const { user, logout, savePreferences } = useAuth();
-  const { isPro, isTrialActive, remainingExtractions, weeklyLimit, showPaywall } =
+  const { isPro, remainingExtractions, weeklyLimit, showPaywall } =
     useSubscription();
   const router = useRouter();
   const tabBarHeight = useBottomTabBarHeight();
@@ -125,8 +125,8 @@ export default function ProfileScreen() {
         .slice(0, 2)
     : '?';
 
-  const planLabel = isPro ? 'Pro' : isTrialActive ? 'Trial' : 'Free';
-  const used = weeklyLimit - remainingExtractions;
+  const planLabel = isPro ? 'Pro' : 'Free';
+  const used = Math.max(0, weeklyLimit - remainingExtractions);
 
   return (
     <View style={styles.container}>
@@ -165,7 +165,9 @@ export default function ProfileScreen() {
           </View>
 
           <View style={styles.extractionRow}>
-            <Text style={styles.extractionLabel}>Recipes this week</Text>
+            <Text style={styles.extractionLabel}>
+              {isPro ? 'Recipes this week' : 'Recipes used'}
+            </Text>
             <Text style={styles.extractionValue}>
               {used} / {weeklyLimit}
             </Text>

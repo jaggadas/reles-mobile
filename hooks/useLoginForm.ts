@@ -39,6 +39,12 @@ export function useLoginForm() {
       return;
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(normalizedEmail)) {
+      Alert.alert("Invalid email", "Please enter a valid email address.");
+      return;
+    }
+
     // If password is already shown, attempt login
     if (showPassword) {
       if (!password) {

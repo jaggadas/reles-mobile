@@ -9,7 +9,7 @@ import { ShareIntentProvider, useShareIntentContext } from 'expo-share-intent';
 
 import { colors, typography } from '@/constants/colors';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
-import { SubscriptionProvider, useSubscription } from '@/contexts/SubscriptionContext';
+import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
 import { extractVideoId } from '@/lib/api';
 
 const RelesLightTheme: Theme = {
@@ -44,14 +44,6 @@ function RootNavigator() {
       router.replace('/(tabs)');
     }
   }, [status, isLoading, segments]);
-
-  // Activate trial for new users
-  const { activateTrial, isPro } = useSubscription();
-  useEffect(() => {
-    if (status === 'logged_in' && !isPro) {
-      activateTrial();
-    }
-  }, [status]);
 
   // Handle YouTube share intent
   useEffect(() => {

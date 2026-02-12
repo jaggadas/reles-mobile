@@ -13,7 +13,6 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Purchases, { type PurchasesPackage } from 'react-native-purchases';
 
 import { colors, spacing, radius, typography, shadows } from '@/constants/colors';
-import { FREE_WEEKLY_LIMIT } from '@/lib/subscription';
 
 interface PaywallModalProps {
   visible: boolean;
@@ -202,7 +201,7 @@ export function PaywallModal({ visible, onPurchased, onContinueFree }: PaywallMo
             style={({ pressed }) => pressed && { opacity: 0.6 }}
           >
             <Text style={styles.freeButtonText}>
-              Continue on Free ({FREE_WEEKLY_LIMIT} recipes/week)
+              Continue on Free Plan
             </Text>
           </Pressable>
 

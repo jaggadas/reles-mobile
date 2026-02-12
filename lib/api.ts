@@ -406,12 +406,11 @@ export async function createInstacartGroceryLink(
 // ── Subscription API ──────────────────────────────────────────
 
 export interface SubscriptionStatus {
-  trial: { startDate: string; recipesUsed: number } | null;
+  isPro: boolean;
+  recipesUsed: number;
   weeklyExtractions: { count: number; weekStart: string };
-  trialActive: boolean;
-  trialRemaining: number;
-  weeklyRemaining: number;
-  proWeeklyRemaining: number;
+  remaining: number;
+  limit: number;
 }
 
 export async function fetchSubscriptionStatus(): Promise<SubscriptionStatus> {
@@ -420,46 +419,27 @@ export async function fetchSubscriptionStatus(): Promise<SubscriptionStatus> {
   return response.json();
 }
 
-export async function apiActivateTrial(): Promise<{
-  alreadyActive: boolean;
-  trial?: { startDate: string; recipesUsed: number };
-  trialActive?: boolean;
-  trialRemaining?: number;
-}> {
-  const response = await authFetch(`${API_BASE_URL}/api/subscription/activate-trial`, {
+export async function apiActivatePro(): Promise<SubscriptionStatus> {
+  const response = await authFetch(`${API_BASE_URL}/api/subscription/activate-pro`, {
     method: "POST",
   });
-  if (!response.ok) throw new Error("Failed to activate trial");
+  if (!response.ok) throw new Error("Failed to activate pro");
   return response.json();
 }
 
 export interface UseExtractionResult {
   allowed: boolean;
   remaining: number;
-  trialActive: boolean;
-  weeklyCount: number;
+  isPro: boolean;
 }
 
-export async function apiUseExtraction(isPro: boolean): Promise<UseExtractionResult> {
+export async function apiUseExtraction(): Promise<UseExtractionResult> {
   const response = await authFetch(`${API_BASE_URL}/api/subscription/use-extraction`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ isPro }),
+    body: JSON.stringify({}),
   });
   if (!response.ok) throw new Error("Failed to record extraction");
-  return response.json();
-}
-
-export async function apiMigrateSubscriptionData(data: {
-  trial: { startDate: string; recipesUsed: number } | null;
-  weeklyExtractions: { count: number; weekStart: string };
-}): Promise<{ migrated: boolean; reason?: string }> {
-  const response = await authFetch(`${API_BASE_URL}/api/subscription/migrate`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  if (!response.ok) throw new Error("Failed to migrate subscription data");
   return response.json();
 }
 

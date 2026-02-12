@@ -563,7 +563,7 @@ export default function RecipePreviewScreen() {
                   <Text style={styles.quotaText}>
                     {remainingExtractions} recipe
                     {remainingExtractions !== 1 ? 's' : ''} remaining
-                    {!isPro ? ' this week' : ''}
+                    {isPro ? ' this week' : ''}
                   </Text>
                   {!isPro && (
                     <Pressable onPress={() => showPaywall()} hitSlop={8}>
