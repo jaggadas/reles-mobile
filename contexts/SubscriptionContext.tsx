@@ -28,12 +28,13 @@ import Purchases, {
   LOG_LEVEL,
 } from "react-native-purchases";
 import { PaywallModal } from "@/components/PaywallModal";
+import { useAuth } from "@/contexts/AuthContext";
 
 // ── API Keys ──
 // Test Store key (works on both platforms, no App Store / Play Store needed)
-const TEST_STORE_API_KEY = "test_rMIgNOxmHQJtUdLVluZMmkekEdD";
+// const TEST_STORE_API_KEY = "test_rMIgNOxmHQJtUdLVluZMmkekEdD";
 // Replace with platform-specific keys when going to production:
-// const PRODUCTION_KEYS = { apple: "appl_...", google: "goog_..." };
+const PRODUCTION_KEYS = { apple: "appl_hIsGqZRomubNlgOOyfcBBAVFrQg"} // , google: "goog_..." };
 
 interface SubscriptionContextValue {
   /** Whether the user has an active "pro" entitlement. */
@@ -61,6 +62,7 @@ interface SubscriptionContextValue {
 const SubscriptionContext = createContext<SubscriptionContextValue | null>(null);
 
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated } = useAuth();
   const [isPro, setIsPro] = useState(false);
   const [isTrialOn, setIsTrialOn] = useState(false);
   const [remainingExtractions, setRemainingExtractions] = useState(FREE_WEEKLY_LIMIT);
@@ -79,7 +81,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
           Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
         }
 
-        await Purchases.configure({ apiKey: TEST_STORE_API_KEY });
+        await Purchases.configure({ apiKey: PRODUCTION_KEYS.apple });
 
         setInitialized(true);
 
@@ -157,6 +159,20 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       // Silently fail, keep current state
     }
   }, [updateFromCustomerInfo]);
+
+  // ── Re-fetch on login, reset on logout ──
+  useEffect(() => {
+    if (!initialized) return;
+    if (isAuthenticated) {
+      refresh();
+    } else {
+      // Reset to defaults so next user doesn't see stale data
+      setIsPro(false);
+      setIsTrialOn(false);
+      setRemainingExtractions(FREE_WEEKLY_LIMIT);
+      setShouldShowTrialWelcome(false);
+    }
+  }, [isAuthenticated, initialized, refresh]);
 
   // ── Custom Paywall (promise-based) ──
 

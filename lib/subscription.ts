@@ -6,7 +6,7 @@ export const FREE_WEEKLY_LIMIT = 2;
 export const PRO_WEEKLY_LIMIT = 50;
 export const TRIAL_RECIPE_LIMIT = PRO_WEEKLY_LIMIT;
 export const TRIAL_DURATION_DAYS = 7;
-export const ENTITLEMENT_ID = "Reles Pro";
+export const ENTITLEMENT_ID = "Reles Pro production";
 
 // ── Trial Welcome (stays local — device-specific UI flag) ─────
 
@@ -85,4 +85,14 @@ export async function markMigrationDone(): Promise<void> {
 /** Remove legacy AsyncStorage keys after successful migration. */
 export async function clearLegacySubscriptionData(): Promise<void> {
   await AsyncStorage.multiRemove([TRIAL_KEY, WEEKLY_EXTRACTIONS_KEY]);
+}
+
+/** Clear all local subscription flags. Call on logout. */
+export async function clearLocalSubscriptionFlags(): Promise<void> {
+  await AsyncStorage.multiRemove([
+    TRIAL_WELCOME_SEEN_KEY,
+    MIGRATION_DONE_KEY,
+    TRIAL_KEY,
+    WEEKLY_EXTRACTIONS_KEY,
+  ]);
 }

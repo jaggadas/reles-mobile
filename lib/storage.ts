@@ -225,3 +225,8 @@ export async function removeGroceryItem(itemId: string): Promise<void> {
 export async function clearGroceryList(): Promise<void> {
   await saveGroceryList([]);
 }
+
+/** Clear all user-specific local data (recipes + grocery list). Call on logout. */
+export async function clearAllUserData(): Promise<void> {
+  await AsyncStorage.multiRemove([STORAGE_KEY, GROCERY_KEY]);
+}

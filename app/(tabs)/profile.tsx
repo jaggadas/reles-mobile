@@ -44,8 +44,8 @@ export default function ProfileScreen() {
     if (p.dietaryRestrictions.isVegan) setDiet('vegan');
     else if (p.dietaryRestrictions.isVegetarian) setDiet('vegetarian');
     else setDiet('none');
-    setSelectedAllergens(p.allergens);
-    setLikedCuisines(p.likedCuisines);
+    setSelectedAllergens(p.allergens ?? []);
+    setLikedCuisines(p.likedCuisines ?? []);
     initialized.current = true;
   }, [user?.preferences]);
 

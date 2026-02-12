@@ -9,6 +9,8 @@ import {
   apiGetMe,
   apiSavePreferences,
 } from "@/lib/auth";
+import { clearAllUserData } from "@/lib/storage";
+import { clearLocalSubscriptionFlags } from "@/lib/subscription";
 
 interface AuthContextValue {
   user: UserProfile | null;
@@ -74,7 +76,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [token]);
 
   const logout = useCallback(async () => {
-    await clearAuthToken();
+    await Promise.all([
+      clearAuthToken(),
+      clearAllUserData(),
+      clearLocalSubscriptionFlags(),
+    ]);
     setToken(null);
     setUser(null);
     setStatus("logged_out");
