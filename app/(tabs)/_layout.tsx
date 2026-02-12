@@ -1,10 +1,14 @@
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Image } from 'expo-image';
 import { Tabs } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import { HapticTab } from '@/components/haptic-tab';
 import { colors, typography } from '@/constants/colors';
 import { useSubscription } from '@/contexts/SubscriptionContext';
+
+const HomeIcon = require('@/assets/icons/Home.svg');
+const BookmarkIcon = require('@/assets/icons/Bookmark.svg');
+const CartIcon = require('@/assets/icons/Cart.svg');
+const ProfileIcon = require('@/assets/icons/Profile.svg');
 
 export default function TabLayout() {
   const { isPro } = useSubscription();
@@ -20,7 +24,7 @@ export default function TabLayout() {
           borderTopWidth: 1,
           borderTopColor: colors.border,
           height: 88,
-          paddingTop: 8,
+          paddingTop: 14,
           elevation: 0,
         },
         headerStyle: {
@@ -40,7 +44,7 @@ export default function TabLayout() {
           title: 'Discover',
           headerShown: false,
           tabBarIcon: ({ color }) => (
-            <MaterialIcons name="home" size={28} color={color} />
+            <Image source={HomeIcon} style={{ width: 32, height: 32 }} tintColor={color} />
           ),
         }}
       />
@@ -62,7 +66,7 @@ export default function TabLayout() {
           title: 'Recipes',
           headerShown: false,
           tabBarIcon: ({ color }) => (
-            <MaterialIcons name="bookmark" size={28} color={color} />
+            <Image source={BookmarkIcon} style={{ width: 32, height: 32 }} tintColor={color} />
           ),
         }}
       />
@@ -72,7 +76,7 @@ export default function TabLayout() {
           title: 'List',
           headerShown: false,
           tabBarIcon: ({ color }) => (
-            <MaterialIcons name="shopping-cart" size={28} color={color} />
+            <Image source={CartIcon} style={{ width: 32, height: 32 }} tintColor={color} />
           ),
         }}
       />
@@ -83,7 +87,7 @@ export default function TabLayout() {
           headerShown: false,
           tabBarIcon: ({ color }) => (
             <View>
-              <MaterialIcons name="person" size={28} color={color} />
+              <Image source={ProfileIcon} style={{ width: 32, height: 32 }} tintColor={color} />
               {isPro && (
                 <View style={styles.proBadge}>
                   <Text style={styles.proBadgeText}>PRO</Text>
