@@ -210,7 +210,7 @@ export default function DiscoverScreen() {
     <View style={styles.headerBorder}>
       <View style={[styles.header, { paddingTop: safeTop + spacing.lg }]}>
         <Image
-          source={require('@/assets/illustrations/extract recipes.png')}
+          source={require('@/assets/illustrations/extract-recipes.png')}
           style={styles.headerIllustration}
           contentFit="cover"
         />

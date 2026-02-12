@@ -80,27 +80,48 @@ export function PaywallModal({ visible, onPurchased, onContinueFree }: PaywallMo
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
       <SafeAreaView style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={{ width: 32 }} />
-          <Text style={styles.headerTitle}>Upgrade to Pro</Text>
-          <Pressable onPress={onContinueFree} hitSlop={12}>
-            <MaterialIcons name="close" size={24} color={colors.textSecondary} />
+        {/* Nav */}
+        <View style={styles.nav}>
+          <View style={{ width: 40 }} />
+          <View style={{ flex: 1 }} />
+          <Pressable onPress={onContinueFree} hitSlop={12} style={styles.closeButton}>
+            <MaterialIcons name="close" size={22} color={colors.text} />
           </Pressable>
+        </View>
+
+        {/* Page Header */}
+        <View style={styles.pageHeader}>
+          <View style={styles.sectionTitleRow}>
+            <Text style={styles.pageTitle}>Reles Pro</Text>
+            <View style={styles.rule} />
+          </View>
+          <Text style={styles.pageSubtitle}>
+            Unlock the full experience
+          </Text>
         </View>
 
         {/* Content */}
         <View style={styles.content}>
-          {/* Hero */}
-          <View style={[styles.iconContainer, { backgroundColor: colors.primaryLight }]}>
-            <MaterialIcons name="workspace-premium" size={56} color={colors.primary} />
+          {/* Hero icon */}
+          <View style={styles.iconContainer}>
+            <MaterialIcons name="workspace-premium" size={36} color={colors.success} />
           </View>
-          <Text style={styles.title}>
-            Unlock Reles Pro
-          </Text>
-          <Text style={styles.subtitle}>
-            Get 50 recipe extractions per week and unlock the full experience.
-          </Text>
+
+          {/* Features card */}
+          <View style={styles.featuresCard}>
+            <View style={styles.featureRow}>
+              <View style={styles.featureDot} />
+              <Text style={styles.featureText}>50 recipe extractions per week</Text>
+            </View>
+            <View style={styles.featureRow}>
+              <View style={styles.featureDot} />
+              <Text style={styles.featureText}>Full access to all features</Text>
+            </View>
+            <View style={styles.featureRow}>
+              <View style={styles.featureDot} />
+              <Text style={styles.featureText}>Priority support</Text>
+            </View>
+          </View>
 
           {/* Package options */}
           {loading ? (
@@ -116,8 +137,9 @@ export function PaywallModal({ visible, onPurchased, onContinueFree }: PaywallMo
                     style={[
                       styles.packageCard,
                       {
-                        borderColor: isSelected ? colors.primary : colors.border,
-                        borderWidth: isSelected ? 2 : 1,
+                        backgroundColor: isSelected ? colors.primaryLight : colors.card,
+                        borderColor: isSelected ? colors.primary : colors.borderLight,
+                        borderWidth: isSelected ? 1.5 : 1,
                       },
                     ]}
                   >
@@ -159,37 +181,33 @@ export function PaywallModal({ visible, onPurchased, onContinueFree }: PaywallMo
             disabled={purchasing || loading || packages.length === 0}
             style={({ pressed }) => [
               styles.subscribeButton,
-              { opacity: (pressed || purchasing) ? 0.8 : 1 },
+              (purchasing || loading || packages.length === 0) && { opacity: 0.45 },
+              pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] },
             ]}
           >
             {purchasing ? (
-              <ActivityIndicator color={colors.textOnPrimary} />
+              <ActivityIndicator size="small" color={colors.textOnPrimary} />
             ) : (
-              <Text style={styles.subscribeText}>
-                Subscribe Now
-              </Text>
+              <>
+                <Text style={styles.subscribeText}>Subscribe Now</Text>
+                <MaterialIcons name="arrow-forward" size={20} color={colors.textOnPrimary} />
+              </>
             )}
           </Pressable>
 
-          {/* Continue free button */}
+          {/* Continue free + Restore */}
           <Pressable
             onPress={onContinueFree}
             disabled={purchasing}
-            style={({ pressed }) => [
-              styles.freeButton,
-              { opacity: pressed ? 0.7 : 1 },
-            ]}
+            style={({ pressed }) => pressed && { opacity: 0.6 }}
           >
             <Text style={styles.freeButtonText}>
               Continue on Free ({FREE_WEEKLY_LIMIT} recipes/week)
             </Text>
           </Pressable>
 
-          {/* Restore */}
           <Pressable onPress={handleRestore} disabled={purchasing}>
-            <Text style={styles.restoreText}>
-              Restore Purchases
-            </Text>
+            <Text style={styles.restoreText}>Restore Purchases</Text>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -197,65 +215,111 @@ export function PaywallModal({ visible, onPurchased, onContinueFree }: PaywallMo
   );
 }
 
+const f = typography.family;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: '#FFFFFF',
   },
-  header: {
+  nav: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
   },
-  headerTitle: {
-    fontSize: typography.size.xl,
-    fontWeight: typography.weight.semibold,
-    color: colors.text,
+  closeButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
+
+  // ── Page Header ────────────────────────────────────────
+  pageHeader: {
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.lg,
+    gap: spacing.xs,
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.lg,
+  },
+  pageTitle: {
+    fontFamily: f.headingBold,
+    fontSize: typography.size['3xl'],
+    fontVariant: ['no-common-ligatures'],
+    color: colors.primary,
+  },
+  rule: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.border,
+  },
+  pageSubtitle: {
+    fontSize: typography.size.base,
+    fontFamily: f.body,
+    color: colors.textSecondary,
+  },
+
+  // ── Content ────────────────────────────────────────────
   content: {
     flex: 1,
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing['3xl'],
+    paddingTop: spacing.lg,
   },
   iconContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: spacing.xl,
+    marginBottom: spacing.lg,
+    backgroundColor: colors.successLight,
   },
-  title: {
-    fontSize: typography.size['5xl'],
-    fontWeight: typography.weight.bold,
-    textAlign: 'center',
-    letterSpacing: -0.5,
-    marginBottom: spacing.sm,
+
+  // ── Features Card ──────────────────────────────────────
+  featuresCard: {
+    width: '100%',
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    padding: spacing.lg,
+    gap: spacing.sm,
+    backgroundColor: colors.card,
+    ...shadows.sm,
+  },
+  featureRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  featureDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.success,
+  },
+  featureText: {
+    fontSize: typography.size.lg,
+    fontFamily: f.bodyMedium,
+    fontWeight: typography.weight.medium,
     color: colors.text,
   },
-  subtitle: {
-    fontSize: typography.size.xl,
-    textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: spacing.md,
-    color: colors.textSecondary,
-  },
+
+  // ── Packages ───────────────────────────────────────────
   packagesContainer: {
     width: '100%',
-    gap: spacing.md,
-    marginTop: spacing.xl,
+    gap: spacing.sm,
+    marginTop: spacing.lg,
   },
   packageCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: radius.lg,
-    padding: spacing.lg,
+    borderRadius: radius.md,
+    padding: spacing.md,
     gap: spacing.md,
-    backgroundColor: colors.card,
-    ...shadows.sm,
   },
   packageRadio: {
     justifyContent: 'center',
@@ -280,53 +344,55 @@ const styles = StyleSheet.create({
   },
   packageTitle: {
     fontSize: typography.size.xl,
+    fontFamily: f.bodySemibold,
     fontWeight: typography.weight.semibold,
     color: colors.text,
   },
   packageDescription: {
     fontSize: typography.size.sm,
+    fontFamily: f.body,
     color: colors.textSecondary,
   },
   packagePrice: {
     fontSize: typography.size['2xl'],
+    fontFamily: f.bodyBold,
     fontWeight: typography.weight.bold,
     color: colors.primary,
   },
+
+  // ── Footer ─────────────────────────────────────────────
   footer: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom: spacing.xl,
+    paddingHorizontal: spacing['2xl'],
+    paddingBottom: spacing.xxl,
+    paddingTop: spacing.md,
     gap: spacing.md,
     alignItems: 'center',
   },
   subscribeButton: {
     width: '100%',
-    height: 56,
-    borderRadius: radius.lg,
+    height: 48,
+    flexDirection: 'row',
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
+    gap: spacing.sm,
     backgroundColor: colors.primary,
   },
   subscribeText: {
-    fontSize: typography.size['2xl'],
-    fontWeight: typography.weight.bold,
+    fontSize: typography.size.xl,
+    fontFamily: f.bodyBold,
     color: colors.textOnPrimary,
-  },
-  freeButton: {
-    width: '100%',
-    height: 48,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   freeButtonText: {
     fontSize: typography.size.lg,
-    fontWeight: typography.weight.medium,
-    color: colors.textSecondary,
+    fontFamily: f.bodySemibold,
+    color: colors.primary,
   },
   restoreText: {
     fontSize: typography.size.sm,
+    fontFamily: f.body,
     marginTop: spacing.xs,
     color: colors.textMuted,
   },

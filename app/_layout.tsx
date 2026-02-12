@@ -37,7 +37,7 @@ function RootNavigator() {
     const inAuthGroup = segments[0] === '(auth)';
 
     if (status === 'logged_out' && !inAuthGroup) {
-      router.replace('/(auth)/login');
+      router.replace('/(auth)/welcome');
     } else if (status === 'onboarding' && !inAuthGroup) {
       router.replace('/(auth)/onboarding-dietary');
     } else if (status === 'logged_in' && inAuthGroup) {
@@ -45,19 +45,13 @@ function RootNavigator() {
     }
   }, [status, isLoading, segments]);
 
-  // Activate trial and show welcome screen for new users
-  const { shouldShowTrialWelcome, activateTrial, isPro } = useSubscription();
+  // Activate trial for new users
+  const { activateTrial, isPro } = useSubscription();
   useEffect(() => {
     if (status === 'logged_in' && !isPro) {
       activateTrial();
     }
   }, [status]);
-
-  useEffect(() => {
-    if (shouldShowTrialWelcome && status === 'logged_in') {
-      router.push('/trial-welcome' as any);
-    }
-  }, [shouldShowTrialWelcome, status]);
 
   // Handle YouTube share intent
   useEffect(() => {
@@ -95,11 +89,7 @@ function RootNavigator() {
       >
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="trial-welcome"
-          options={{ headerShown: false, gestureEnabled: false }}
-        />
-        <Stack.Screen
+<Stack.Screen
           name="recipe/preview"
           options={{ headerShown: false }}
         />
