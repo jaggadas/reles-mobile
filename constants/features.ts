@@ -2,29 +2,34 @@ import { ImageSourcePropType } from "react-native";
 
 export type FeatureSlide = {
   image: ImageSourcePropType;
-  title: string;
+  title?: string;
   subtitle: string;
+  isLogo?: boolean;
+
 };
 
 export const FEATURE_SLIDES: FeatureSlide[] = [
   {
+    image: require("@/assets/illustrations/save-and-organize.png"),
+    subtitle: "Turn cooking videos into recipes you can actually\u00A0follow.",
+    isLogo: true,
+  },
+  {
     image: require("@/assets/illustrations/saved-to-served.png"),
-    title: "From Saved to Served",
-    subtitle: "Turn any YouTube cooking video into a beautiful, step-by-step recipe.",
+    title: "Saved to Served",
+    subtitle:
+      "Paste any YouTube link and get ingredients, steps, and timings \u2014 pulled out\u00A0automatically.",
   },
   {
     image: require("@/assets/illustrations/extract-recipes.png"),
-    title: "Extract Recipes",
-    subtitle: "Paste a link, and we'll pull out ingredients, steps, and timings for you.",
-  },
-  {
-    image: require("@/assets/illustrations/save-and-organize.png"),
-    title: "Save & Organize",
-    subtitle: "Build your personal cookbook. Search, filter, and cook anytime you want.",
+    title: "Cooked For You",
+    subtitle:
+      "Personalized to your diet, allergens, and favorite cuisines. Every suggestion fits how\u00A0you\u00A0eat.",
   },
   {
     image: require("@/assets/illustrations/grocery.png"),
-    title: "Smart Grocery Lists",
-    subtitle: "Auto-generate shopping lists from any recipe. Never forget an ingredient.",
+    title: "One Tap\nGrocery Lists",
+    subtitle:
+      "Turn any cooking video into a shopping list. Never forget an\u00A0ingredient\u00A0again.",
   },
 ];
