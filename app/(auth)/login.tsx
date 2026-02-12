@@ -1,18 +1,18 @@
 import React from "react";
 import {
   View,
-  Text,
   TextInput,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
   Animated,
 } from "react-native";
+import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FeatureCarousel } from "@/components/FeatureCarousel";
 import { Button } from "@/components/ui";
 import { useLoginForm } from "@/hooks/useLoginForm";
-import { colors, spacing, radius, typography, shadows } from "@/constants/colors";
+import { colors, spacing, radius, typography } from "@/constants/colors";
 
 export default function LoginScreen() {
   const {
@@ -28,20 +28,22 @@ export default function LoginScreen() {
   } = useLoginForm();
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
+        <Image
+          source={require('@/assets/images/Reles.svg')}
+          style={styles.logo}
+          contentFit="contain"
+        />
+
         <View style={styles.carouselSection}>
           <FeatureCarousel />
         </View>
 
         <View style={styles.formSection}>
-          <Text style={[styles.tagline, { color: colors.textSecondary }]}>
-            From saved to served
-          </Text>
-
           <View style={[styles.inputContainer, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}>
             <TextInput
               style={[styles.input, { color: colors.text }]}
@@ -97,6 +99,7 @@ const f = typography.family;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#FFFFFF',
   },
   flex: {
     flex: 1,
@@ -106,18 +109,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     minHeight: 300,
   },
+  logo: {
+    width: 140,
+    height: 48,
+    alignSelf: 'center' as const,
+    marginTop: spacing.sm,
+  },
   formSection: {
     paddingHorizontal: spacing["2xl"],
     paddingBottom: spacing.xl,
     gap: spacing.sm,
-  },
-  tagline: {
-    fontSize: typography.size.base,
-    fontFamily: f.body,
-    textAlign: "center",
-    fontStyle: "italic",
-    marginBottom: spacing.xs,
-    letterSpacing: 0.3,
   },
   inputContainer: {
     height: 46,

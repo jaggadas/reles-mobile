@@ -1,15 +1,15 @@
 import React, { useCallback } from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { OnboardingProgress } from "@/components/OnboardingProgress";
 import { SwipeCardDeck } from "@/components/SwipeCardDeck";
 import { CUISINE_CARDS } from "@/constants/cuisines";
 import { colors, spacing, typography } from "@/constants/colors";
 
 export default function OnboardingCuisinesScreen() {
   const router = useRouter();
+  const { top: safeTop } = useSafeAreaInsets();
 
   const handleComplete = useCallback(
     (liked: string[]) => {
@@ -22,15 +22,13 @@ export default function OnboardingCuisinesScreen() {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <OnboardingProgress currentStep={2} totalSteps={3} />
-
-      <View style={styles.header}>
-        <Text style={styles.illustration}>🍳</Text>
-        <Text style={[styles.heading, { color: colors.text }]}>
-          What do you love?
-        </Text>
-        <Text style={[styles.subheading, { color: colors.textSecondary }]}>
+    <View style={styles.container}>
+      <View style={[styles.pageHeader, { paddingTop: safeTop + spacing.xl }]}>
+        <View style={styles.sectionTitleRow}>
+          <Text style={styles.pageTitle}>What do you love?</Text>
+          <View style={styles.rule} />
+        </View>
+        <Text style={styles.pageSubtitle}>
           Swipe right to like, left to skip
         </Text>
       </View>
@@ -38,31 +36,46 @@ export default function OnboardingCuisinesScreen() {
       <GestureHandlerRootView style={styles.deck}>
         <SwipeCardDeck cards={CUISINE_CARDS} onComplete={handleComplete} />
       </GestureHandlerRootView>
-    </SafeAreaView>
+    </View>
   );
 }
+
+const f = typography.family;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#FFFFFF',
   },
-  header: {
-    alignItems: "center",
-    paddingTop: spacing.lg,
+
+  // ── Page Header ────────────────────────────────────────
+  pageHeader: {
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.lg,
     gap: spacing.xs,
   },
-  illustration: {
-    fontSize: 48,
-    marginBottom: spacing.sm,
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.lg,
   },
-  heading: {
-    fontSize: typography.size["5xl"],
-    fontWeight: typography.weight.bold,
-    letterSpacing: -0.5,
+  pageTitle: {
+    fontFamily: f.headingBold,
+    fontSize: typography.size['3xl'],
+    fontVariant: ['no-common-ligatures'],
+    color: colors.primary,
   },
-  subheading: {
-    fontSize: typography.size.xl,
+  rule: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.border,
   },
+  pageSubtitle: {
+    fontSize: typography.size.base,
+    fontFamily: f.body,
+    color: colors.textSecondary,
+  },
+
   deck: {
     flex: 1,
   },

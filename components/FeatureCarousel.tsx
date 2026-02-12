@@ -36,7 +36,7 @@ export function FeatureCarousel() {
   }, []);
 
   useEffect(() => {
-    const timer = setInterval(scrollToNext, 2000);
+    const timer = setInterval(scrollToNext, 4000);
     return () => clearInterval(timer);
   }, [scrollToNext]);
 
@@ -99,12 +99,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing["3xl"],
   },
   illustration: {
-    width: 280,
-    height: 280,
+    width: 320,
+    height: 320,
     marginTop: spacing.md,
   },
   title: {
-    fontSize: typography.size["3xl"],
+    fontSize: typography.size["5xl"],
     fontFamily: f.headingBold,
     fontVariant: ['no-common-ligatures'],
     textAlign: "center",
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: typography.size.base,
+    fontSize: typography.size.xl,
     fontFamily: f.body,
     textAlign: "center",
     lineHeight: 20,

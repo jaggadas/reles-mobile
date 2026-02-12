@@ -7,9 +7,8 @@ import {
   Pressable,
   ScrollView,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { OnboardingProgress } from "@/components/OnboardingProgress";
 import { Button } from "@/components/ui";
 import { DIETARY_OPTIONS } from "@/constants/dietary";
 import { ALLERGEN_OPTIONS } from "@/constants/allergens";
@@ -26,25 +25,26 @@ export default function OnboardingDietaryScreen() {
     handleFinish,
   } = useOnboardingDietary();
 
+  const { top: safeTop } = useSafeAreaInsets();
+
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <OnboardingProgress currentStep={3} totalSteps={3} />
+    <View style={styles.container}>
+      <View style={[styles.pageHeader, { paddingTop: safeTop + spacing.xl }]}>
+        <View style={styles.sectionTitleRow}>
+          <Text style={styles.pageTitle}>Dietary Preferences</Text>
+          <View style={styles.rule} />
+        </View>
+        <Text style={styles.pageSubtitle}>
+          Choose as many as apply
+        </Text>
+      </View>
 
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={[styles.heading, { color: colors.text }]}>
-          Dietary preferences
-        </Text>
-        <Text style={[styles.subheading, { color: colors.textSecondary }]}>
-          Choose as many as apply
-        </Text>
-
-        <Text style={[styles.sectionLabel, { color: colors.text }]}>
-          I eat...
-        </Text>
+        <Text style={styles.sectionLabel}>I eat...</Text>
         <View style={styles.dietGrid}>
           {DIETARY_OPTIONS.map((opt) => {
             const isSelected = diet === opt.id;
@@ -64,6 +64,11 @@ export default function OnboardingDietaryScreen() {
                   },
                 ]}
               >
+                {isSelected && (
+                  <View style={styles.dietCheck}>
+                    <MaterialIcons name="check" size={14} color={colors.textOnPrimary} />
+                  </View>
+                )}
                 <Image
                   source={opt.image}
                   style={styles.dietImage}
@@ -86,9 +91,7 @@ export default function OnboardingDietaryScreen() {
           })}
         </View>
 
-        <Text style={[styles.sectionLabel, { color: colors.text }]}>
-          Allergens to avoid
-        </Text>
+        <Text style={styles.sectionLabel}>Allergens to avoid</Text>
         <View style={styles.allergenGrid}>
           {ALLERGEN_OPTIONS.map((allergen) => {
             const isSelected = selectedAllergens.includes(allergen.id);
@@ -144,8 +147,11 @@ export default function OnboardingDietaryScreen() {
           loading={loading}
           size="lg"
         />
+        <Text style={styles.footerNote}>
+          You can change these anytime in your profile settings.
+        </Text>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -154,42 +160,60 @@ const f = typography.family;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#FFFFFF',
   },
+
+  // ── Page Header ────────────────────────────────────────
+  pageHeader: {
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.lg,
+    gap: spacing.xs,
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.lg,
+  },
+  pageTitle: {
+    fontFamily: f.headingBold,
+    fontSize: typography.size['3xl'],
+    fontVariant: ['no-common-ligatures'],
+    color: colors.primary,
+  },
+  rule: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.border,
+  },
+  pageSubtitle: {
+    fontSize: typography.size.base,
+    fontFamily: f.body,
+    color: colors.textSecondary,
+  },
+
   scroll: {
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: spacing["2xl"],
-    paddingTop: spacing.lg,
     paddingBottom: spacing.lg,
-    alignItems: "center",
   },
-  heading: {
-    fontSize: typography.size["5xl"],
-    fontFamily: f.headingBold,
-    fontVariant: ['no-common-ligatures'],
-    letterSpacing: -0.5,
-  },
-  subheading: {
-    fontSize: typography.size.xl,
-    fontFamily: f.body,
-    marginTop: spacing.xs,
-    marginBottom: spacing["2xl"],
-  },
+
+  // Section labels (matches profile.tsx pattern)
   sectionLabel: {
-    fontSize: typography.size["2xl"],
+    fontSize: typography.size['2xl'],
     fontFamily: f.headingBold,
     fontVariant: ['no-common-ligatures'],
+    color: colors.text,
     marginBottom: spacing.md,
     marginTop: spacing.lg,
-    alignSelf: "flex-start",
+    paddingHorizontal: spacing.xl,
   },
 
   // Diet grid
   dietGrid: {
     flexDirection: "row",
     gap: spacing.md,
-    width: "100%",
+    paddingHorizontal: spacing.xl,
   },
   dietCard: {
     flex: 1,
@@ -200,6 +224,18 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     borderWidth: 1.5,
     overflow: "hidden",
+  },
+  dietCheck: {
+    position: "absolute",
+    top: spacing.sm,
+    right: spacing.sm,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1,
   },
   dietImage: {
     width: "75%",
@@ -218,7 +254,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing.md,
-    width: "100%",
+    paddingHorizontal: spacing.xl,
   },
   allergenCard: {
     width: "30.5%",
@@ -240,6 +276,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
+    zIndex: 1,
   },
   allergenIcon: {
     width: "70%",
@@ -258,5 +295,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing["2xl"],
     paddingBottom: spacing.xxl,
     paddingTop: spacing.md,
+  },
+  footerNote: {
+    fontSize: typography.size.sm,
+    fontFamily: f.body,
+    color: colors.textMuted,
+    textAlign: "center",
+    marginTop: spacing.sm,
   },
 });

@@ -5,13 +5,12 @@ import {
   TextInput,
   Image,
   StyleSheet,
+  Pressable,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { OnboardingProgress } from "@/components/OnboardingProgress";
 import { Button } from "@/components/ui";
 import { useOnboardingName } from "@/hooks/useOnboardingName";
 import { colors, spacing, radius, typography } from "@/constants/colors";
@@ -29,17 +28,26 @@ export default function OnboardingNameScreen() {
     handleBack,
   } = useOnboardingName();
 
+  const { top: safeTop } = useSafeAreaInsets();
+
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={styles.header}>
+    <View style={styles.container}>
+      <View style={[styles.nav, { paddingTop: safeTop }]}>
         <Pressable onPress={handleBack} style={styles.backButton} hitSlop={8}>
           <MaterialIcons name="arrow-back" size={24} color={colors.text} />
         </Pressable>
-        <View style={styles.progressWrapper}>
-          <OnboardingProgress currentStep={1} totalSteps={3} />
-        </View>
-        <View style={styles.backButton} />
       </View>
+
+      <View style={styles.pageHeader}>
+        <View style={styles.sectionTitleRow}>
+          <Text style={styles.pageTitle}>Create Account</Text>
+          <View style={styles.rule} />
+        </View>
+        <Text style={styles.pageSubtitle}>
+          Create your account to start saving recipes
+        </Text>
+      </View>
+
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -53,10 +61,6 @@ export default function OnboardingNameScreen() {
         </View>
 
         <View style={styles.formSection}>
-          <Text style={[styles.subheading, { color: colors.textSecondary }]}>
-            Create your account to start saving recipes
-          </Text>
-
           <View style={[styles.inputContainer, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}>
             <TextInput
               style={[styles.input, { color: colors.text }]}
@@ -108,7 +112,7 @@ export default function OnboardingNameScreen() {
           />
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -117,8 +121,9 @@ const f = typography.family;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#FFFFFF',
   },
-  header: {
+  nav: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: spacing.lg,
@@ -129,31 +134,52 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  progressWrapper: {
-    flex: 1,
+
+  // ── Page Header ────────────────────────────────────────
+  pageHeader: {
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.lg,
+    gap: spacing.xs,
   },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.lg,
+  },
+  pageTitle: {
+    fontFamily: f.headingBold,
+    fontSize: typography.size['3xl'],
+    fontVariant: ['no-common-ligatures'],
+    color: colors.primary,
+  },
+  rule: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.border,
+  },
+  pageSubtitle: {
+    fontSize: typography.size.base,
+    fontFamily: f.body,
+    color: colors.textSecondary,
+  },
+
   flex: {
     flex: 1,
   },
   illustrationSection: {
-    flex: 1,
+    alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.lg,
   },
   illustrationImage: {
-    width: "100%",
-    height: "100%",
+    width: 200,
+    height: 200,
   },
   formSection: {
     paddingHorizontal: spacing["2xl"],
     paddingBottom: spacing.xl,
     gap: spacing.sm,
-  },
-  subheading: {
-    fontSize: typography.size.base,
-    fontFamily: f.body,
-    textAlign: "center",
-    marginBottom: spacing.xs,
   },
   inputContainer: {
     height: 46,
