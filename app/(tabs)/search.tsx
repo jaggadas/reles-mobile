@@ -1,36 +1,22 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
-import React from 'react';
+import { Image } from 'expo-image';
+import { useFocusEffect } from 'expo-router';
+import React, { useCallback, useMemo } from 'react';
 import {
   ActivityIndicator,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { ExtractionCard } from '@/components/ExtractionCard';
 import { VideoSearchResults } from '@/components/VideoSearchResults';
 import { colors, radius, spacing, typography } from '@/constants/colors';
-import { useSubscription } from '@/contexts/SubscriptionContext';
-import { useRecipeSearch, type DietFilter } from '@/hooks/useRecipeSearch';
-
-// ── Diet filter config ────────────────────────────────────────────
-
-const DIET_FILTERS: {
-  value: DietFilter;
-  label: string;
-  icon: React.ComponentProps<typeof MaterialIcons>['name'];
-  activeBg: string;
-  activeBorder: string;
-  activeColor: string;
-}[] = [
-  { value: 'veg',    label: 'Veg',     icon: 'eco',        activeBg: '#E8F5E9', activeBorder: '#A5D6A7', activeColor: '#2E7D32' },
-  { value: 'nonveg', label: 'Non-Veg', icon: 'restaurant', activeBg: '#FBE9E7', activeBorder: '#FFAB91', activeColor: '#BF360C' },
-  { value: 'vegan',  label: 'Vegan',   icon: 'spa',        activeBg: '#E0F2F1', activeBorder: '#80CBC4', activeColor: '#00695C' },
-];
+import { useAuth } from '@/contexts/AuthContext';
+import { useRecipeSearch } from '@/hooks/useRecipeSearch';
 
 // ── Component ────────────────────────────────────────────────────
 
@@ -40,89 +26,97 @@ export default function SearchScreen() {
     setQuery,
     searchResults,
     setSearchResults,
-    phase,
     error,
-    setError,
     isSearching,
-    dietFilter,
-    setDietFilter,
     inputRef,
-    trendingSearches,
     showIdle,
     handleSearch,
     handleSelectVideo,
-    handleSuggestionPress,
   } = useRecipeSearch();
-
-  const { remainingExtractions, weeklyLimit, isPro, isTrialActive, showPaywall } = useSubscription();
 
   // ── Colors ──
   const textColor = colors.text;
   const subtextColor = colors.textSecondary;
-  const inputBg = colors.inputBackground;
-  const placeholderColor = colors.textMuted;
   const primaryColor = colors.primary;
-  const primaryTextColor = colors.textOnPrimary;
-  const borderColor = colors.borderLight;
-  const categoryBg = colors.categoryBg;
 
-  const tabBarHeight = useBottomTabBarHeight();
+  const { top: safeTop } = useSafeAreaInsets();
+  const { user } = useAuth();
+
+  // ── Greeting collapse animation ──
+  const greetingName = user?.name?.split(' ')[0] || 'Chef';
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12)
+      return { greeting: `Good morning, ${greetingName}`, subtitle: 'What should we cook today?' };
+    if (hour >= 12 && hour < 17)
+      return { greeting: `Good afternoon, ${greetingName}`, subtitle: 'Looking for lunch ideas?' };
+    if (hour >= 17 && hour < 22)
+      return { greeting: `Good evening, ${greetingName}`, subtitle: 'Time to make something delicious' };
+    return { greeting: `Late night cooking, ${greetingName}?`, subtitle: "Let's find a midnight snack" };
+  }, [greetingName]);
+
+  const collapseProgress = useSharedValue(1);
+
+  useFocusEffect(
+    useCallback(() => {
+      collapseProgress.value = 0;
+      collapseProgress.value = withTiming(1, { duration: 350, easing: Easing.out(Easing.cubic) });
+    }, []),
+  );
+
+  const greetingAnimStyle = useAnimatedStyle(() => ({
+    opacity: 1 - collapseProgress.value,
+    maxHeight: (1 - collapseProgress.value) * 80,
+    overflow: 'hidden' as const,
+  }));
 
   return (
     <View style={styles.container}>
-      {/* Search bar */}
-      <View style={styles.searchContainer}>
-        <View style={[styles.inputWrapper, { backgroundColor: inputBg, borderColor: borderColor as string }]}>
-          <MaterialIcons name="search" size={20} color={placeholderColor as string} />
+      {/* Header */}
+      <View style={styles.headerBorder}>
+      <View style={[styles.header, { paddingTop: safeTop + spacing.lg }]}>
+        <Image
+          source={require('@/assets/illustrations/extract recipes.png')}
+          style={styles.headerIllustration}
+          contentFit="cover"
+        />
+        <Image
+          source={require('@/assets/images/Reles.svg')}
+          style={styles.logo}
+          contentFit="contain"
+          tintColor="#FFFFFF"
+        />
+
+        {/* Greeting – collapses on mount */}
+        <Animated.View style={[styles.greetingContainer, greetingAnimStyle]}>
+          <Text style={styles.greetingText}>{greeting.greeting}</Text>
+          <Text style={styles.greetingSubtext}>{greeting.subtitle}</Text>
+        </Animated.View>
+
+        {/* Search bar */}
+        <View style={styles.inputWrapper}>
+          <MaterialIcons name="search" size={20} color="rgba(255,255,255,0.5)" />
           <TextInput
             ref={inputRef}
-            style={[styles.input, { color: textColor }]}
-            placeholder="Paste URL or search recipes..."
-            placeholderTextColor={placeholderColor as string}
+            style={styles.input}
+            placeholder="Search"
+            placeholderTextColor="rgba(255,255,255,0.5)"
             value={query}
             onChangeText={setQuery}
             onSubmitEditing={() => handleSearch()}
             returnKeyType="search"
             autoCapitalize="none"
             autoCorrect={false}
+            autoFocus
           />
           {query.length > 0 && (
-            <Pressable onPress={() => { setQuery(''); setSearchResults([]); setError(null); }}>
-              <MaterialIcons name="close" size={20} color={placeholderColor as string} />
+            <Pressable onPress={() => { setQuery(''); setSearchResults([]); }}>
+              <MaterialIcons name="close" size={20} color="rgba(255,255,255,0.5)" />
             </Pressable>
           )}
         </View>
-        <Pressable
-          onPress={() => handleSearch()}
-          style={[styles.searchButton, { backgroundColor: primaryColor }]}
-        >
-          <MaterialIcons name="arrow-forward" size={20} color={primaryTextColor as string} />
-        </Pressable>
       </View>
-
-      {/* Diet filter – hidden during extraction */}
-      {phase === 'idle' && (
-        <View style={styles.dietFilterRow}>
-          {DIET_FILTERS.map((f) => {
-            const active = dietFilter === f.value;
-            return (
-              <Pressable
-                key={f.value}
-                onPress={() => setDietFilter(active ? 'all' : f.value)}
-                style={[
-                  styles.dietFilterButton,
-                  { backgroundColor: active ? f.activeBg : colors.categoryBg, borderColor: active ? f.activeBorder : colors.borderLight },
-                ]}
-              >
-                <MaterialIcons name={f.icon} size={14} color={active ? f.activeColor : (subtextColor as string)} />
-                <Text style={[styles.dietFilterLabel, { color: active ? f.activeColor : subtextColor }]}>
-                  {f.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-      )}
+      </View>
 
       {/* Loading state */}
       {isSearching && (
@@ -132,81 +126,30 @@ export default function SearchScreen() {
         </View>
       )}
 
-      {/* Extraction card */}
-      <ExtractionCard phase={phase} error={error} />
+      {/* Search error */}
+      {error && searchResults.length === 0 && !isSearching && (
+        <View style={styles.loadingContainer}>
+          <MaterialIcons name="search-off" size={32} color={colors.textMuted} />
+          <Text style={[styles.loadingText, { color: subtextColor }]}>{error}</Text>
+        </View>
+      )}
 
       {/* Search results */}
-      {searchResults.length > 0 && phase === 'idle' && (
+      {searchResults.length > 0 && (
         <VideoSearchResults results={searchResults} onSelect={handleSelectVideo} />
       )}
 
-      {/* Idle state: suggestions */}
+      {/* Idle state */}
       {showIdle && (
-        <ScrollView
-          contentContainerStyle={[styles.idleContent, { paddingBottom: tabBarHeight }]}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={styles.idleCenter}>
-            <MaterialIcons name="search" size={48} color={colors.borderLight} />
-            <Text style={[styles.idleTitle, { color: textColor }]}>
-              Find your next recipe
-            </Text>
-            <Text style={[styles.idleSubtitle, { color: subtextColor }]}>
-              Search for recipes or paste a YouTube URL
-            </Text>
-          </View>
-
-          <View style={styles.suggestionsSection}>
-            <Text style={[styles.suggestionsLabel, { color: subtextColor }]}>
-              Trending searches
-            </Text>
-            <View style={styles.suggestionsWrap}>
-              {trendingSearches.map((item) => (
-                <Pressable
-                  key={item.label}
-                  onPress={() => handleSuggestionPress(item.query)}
-                  style={({ pressed }) => [
-                    styles.suggestionChip,
-                    {
-                      backgroundColor: categoryBg as string,
-                      borderColor: borderColor as string,
-                      opacity: pressed ? 0.7 : 1,
-                    },
-                  ]}
-                >
-                  <MaterialIcons name="trending-up" size={14} color={subtextColor as string} />
-                  <Text style={[styles.suggestionLabel, { color: subtextColor }]}>{item.label}</Text>
-                </Pressable>
-              ))}
-            </View>
-          </View>
-
-          {/* Extraction quota banner */}
-          <View style={[styles.quotaBanner, !isPro && styles.quotaBannerFree]}>
-            <View style={styles.quotaLeft}>
-              <View style={styles.quotaCountRow}>
-                <Text style={styles.quotaCount}>{remainingExtractions}</Text>
-                <Text style={styles.quotaOf}>/{weeklyLimit}</Text>
-              </View>
-              <Text style={[styles.quotaLabel, { color: subtextColor }]}>
-                {isPro ? 'recipes left · Pro' : isTrialActive ? 'recipes left · Trial' : 'recipes left this week'}
-              </Text>
-            </View>
-            {!isPro && (
-              <Pressable
-                onPress={() => showPaywall()}
-                style={({ pressed }) => [
-                  styles.quotaUpgradeButton,
-                  { opacity: pressed ? 0.85 : 1 },
-                ]}
-              >
-                <MaterialIcons name="bolt" size={16} color="#FFFFFF" />
-                <Text style={styles.quotaUpgradeText}>Go Pro</Text>
-              </Pressable>
-            )}
-          </View>
-        </ScrollView>
+        <View style={styles.idleCenter}>
+          <MaterialIcons name="search" size={48} color={colors.borderLight} />
+          <Text style={[styles.idleTitle, { color: textColor }]}>
+            Find your next recipe
+          </Text>
+          <Text style={[styles.idleSubtitle, { color: subtextColor }]}>
+            Search for recipes or paste a YouTube URL
+          </Text>
+        </View>
       )}
     </View>
   );
@@ -219,119 +162,73 @@ const f = typography.family;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: '#FFFFFF',
+  },
+
+  // Header
+  headerBorder: {
+    backgroundColor: '#E5CCA9',
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    paddingBottom: 1,
+  },
+  header: {
+    backgroundColor: '#8B1A1A',
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.xl,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    overflow: 'hidden' as const,
+  },
+  headerIllustration: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 80,
+    right: 0,
+    bottom: 0,
+  },
+  logo: {
+    width: 140,
+    height: 48,
+    marginLeft: -24,
+  },
+
+  // Greeting
+  greetingContainer: {
+    paddingTop: spacing.md,
+  },
+  greetingText: {
+    fontFamily: f.heading,
+    fontSize: typography.size['4xl'],
+    fontVariant: ['no-common-ligatures'],
+    letterSpacing: 0.5,
+    color: '#FFFFFF',
+  },
+  greetingSubtext: {
+    fontFamily: f.body,
+    fontSize: typography.size.lg,
+    marginTop: spacing.xs,
+    color: 'rgba(255,255,255,0.7)',
   },
 
   // Search
-  searchContainer: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.sm,
-  },
   inputWrapper: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: radius.lg,
-    borderWidth: 1,
+    backgroundColor: 'rgba(255,255,255,0.15)',
     paddingHorizontal: spacing.md,
     height: 48,
     gap: spacing.sm,
+    marginTop: spacing.md,
   },
   input: {
     flex: 1,
     fontFamily: f.body,
     fontSize: typography.size.lg,
     height: '100%',
-  },
-  searchButton: {
-    borderRadius: radius.lg,
-    height: 48,
-    width: 48,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  // Diet filter
-  dietFilterRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.xl,
-    paddingBottom: spacing.md,
-  },
-  dietFilterButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.xs,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.full,
-    borderWidth: 1,
-  },
-  dietFilterLabel: {
-    fontFamily: f.bodySemibold,
-    fontSize: typography.size.sm,
-  },
-
-  // Quota banner
-  quotaBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: spacing.xl,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-  },
-  quotaBannerFree: {
-    backgroundColor: '#FFFAF6',
-    borderColor: colors.primary,
-  },
-  quotaLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  quotaCountRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-  },
-  quotaCount: {
-    fontFamily: f.headingBold,
-    fontSize: typography.size['2xl'],
-    color: colors.primary,
-  },
-  quotaOf: {
-    fontFamily: f.body,
-    fontSize: typography.size.base,
-    color: colors.primary,
-    opacity: 0.6,
-  },
-  quotaLabel: {
-    fontFamily: f.body,
-    fontSize: typography.size.sm,
-  },
-  quotaUpgradeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.full,
-    backgroundColor: colors.primary,
-  },
-  quotaUpgradeText: {
-    fontFamily: f.bodySemibold,
-    fontSize: typography.size.base,
     color: '#FFFFFF',
   },
-
   // Loading
   loadingContainer: {
     alignItems: 'center',
@@ -344,19 +241,18 @@ const styles = StyleSheet.create({
   },
 
   // Idle state
-  idleContent: {
-    flexGrow: 1,
-    paddingHorizontal: spacing.xl,
-  },
   idleCenter: {
+    flex: 1,
     alignItems: 'center',
-    paddingTop: spacing['3xl'],
-    paddingBottom: spacing.xxl,
+    justifyContent: 'center',
     gap: spacing.sm,
+    paddingHorizontal: spacing.xl,
+    marginTop: -spacing.xxl,
   },
   idleTitle: {
     fontFamily: f.headingBold,
     fontSize: typography.size['2xl'],
+    fontVariant: ['no-common-ligatures'],
     letterSpacing: -0.2,
     marginTop: spacing.md,
   },
@@ -364,30 +260,5 @@ const styles = StyleSheet.create({
     fontFamily: f.body,
     fontSize: typography.size.base,
     textAlign: 'center',
-  },
-  suggestionsSection: {
-    gap: spacing.md,
-  },
-  suggestionsLabel: {
-    fontFamily: f.bodySemibold,
-    fontSize: typography.size.base,
-  },
-  suggestionsWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  suggestionChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.full,
-    borderWidth: 1,
-  },
-  suggestionLabel: {
-    fontFamily: f.bodyMedium,
-    fontSize: typography.size.sm,
   },
 });

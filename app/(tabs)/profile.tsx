@@ -12,10 +12,11 @@ import {
   View,
 } from 'react-native';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/Button';
 import { ALLERGEN_OPTIONS } from '@/constants/allergens';
-import { colors, radius, shadows, spacing, typography } from '@/constants/colors';
+import { colors, radius, spacing, typography } from '@/constants/colors';
 import { CUISINE_CARDS } from '@/constants/cuisines';
 import { DIETARY_OPTIONS } from '@/constants/dietary';
 import { useAuth } from '@/contexts/AuthContext';
@@ -27,13 +28,14 @@ export default function ProfileScreen() {
     useSubscription();
   const router = useRouter();
   const tabBarHeight = useBottomTabBarHeight();
+  const { top: safeTop } = useSafeAreaInsets();
 
   // Editable preference state
   const [diet, setDiet] = useState<string>('none');
   const [selectedAllergens, setSelectedAllergens] = useState<string[]>([]);
   const [likedCuisines, setLikedCuisines] = useState<string[]>([]);
   const initialized = useRef(false);
-  const saveTimer = useRef<ReturnType<typeof setTimeout>>();
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   // Sync from user preferences on mount
   useEffect(() => {
@@ -130,11 +132,18 @@ export default function ProfileScreen() {
     <View style={styles.container}>
       <ScrollView
         contentContainerStyle={{
-          paddingHorizontal: spacing.lg,
           paddingBottom: tabBarHeight + spacing.xl,
         }}
         showsVerticalScrollIndicator={false}
       >
+        {/* Page Header */}
+        <View style={[styles.pageHeader, { paddingTop: safeTop + spacing.xl }]}>
+          <View style={styles.sectionTitleRow}>
+            <Text style={styles.pageTitle}>Profile</Text>
+            <View style={styles.rule} />
+          </View>
+        </View>
+
         {/* User Info */}
         <View style={styles.userSection}>
           <View style={styles.avatar}>
@@ -278,11 +287,11 @@ export default function ProfileScreen() {
         <Text style={styles.sectionLabel}>Cuisines I love</Text>
         <View style={styles.cuisineGrid}>
           {CUISINE_CARDS.map((c) => {
-            const isSelected = likedCuisines.includes(c.id);
+            const isSelected = likedCuisines.includes(c.category);
             return (
               <Pressable
                 key={c.id}
-                onPress={() => toggleCuisine(c.id)}
+                onPress={() => toggleCuisine(c.category)}
                 style={[
                   styles.cuisineCard,
                   {
@@ -319,13 +328,15 @@ export default function ProfileScreen() {
         </View>
 
         {/* Logout */}
-        <Button
-          title="Log out"
-          onPress={handleLogout}
-          variant="destructive"
-          icon="logout"
-          style={{ marginTop: spacing.xl }}
-        />
+        <View style={{ paddingHorizontal: spacing.xl }}>
+          <Button
+            title="Log out"
+            onPress={handleLogout}
+            variant="destructive"
+            icon="logout"
+            style={{ marginTop: spacing.xl }}
+          />
+        </View>
       </ScrollView>
     </View>
   );
@@ -333,14 +344,40 @@ export default function ProfileScreen() {
 
 const AVATAR_SIZE = 72;
 
+const f = typography.family;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: '#FFFFFF',
   },
+
+  // ── Page Header ────────────────────────────────────────
+  pageHeader: {
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.lg,
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.lg,
+  },
+  pageTitle: {
+    fontFamily: f.headingBold,
+    fontSize: typography.size['3xl'],
+    fontVariant: ['no-common-ligatures'],
+    color: colors.primary,
+  },
+  rule: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.border,
+  },
+
   userSection: {
     alignItems: 'center',
-    paddingVertical: spacing.xxl,
+    paddingVertical: spacing.xl,
+    paddingHorizontal: spacing.xl,
   },
   avatar: {
     width: AVATAR_SIZE,
@@ -353,17 +390,19 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     fontSize: typography.size['4xl'],
-    fontFamily: typography.family.headingBold,
+    fontFamily: f.headingBold,
+    fontVariant: ['no-common-ligatures'],
     color: colors.primary,
   },
   userName: {
     fontSize: typography.size['3xl'],
-    fontFamily: typography.family.headingBold,
+    fontFamily: f.headingBold,
+    fontVariant: ['no-common-ligatures'],
     color: colors.text,
   },
   userEmail: {
     fontSize: typography.size.base,
-    fontFamily: typography.family.body,
+    fontFamily: f.body,
     color: colors.textSecondary,
     marginTop: spacing.xs,
   },
@@ -373,8 +412,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderRadius: radius.lg,
     padding: spacing.lg,
+    marginHorizontal: spacing.xl,
     marginBottom: spacing.lg,
-    ...shadows.sm,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -384,7 +425,8 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: typography.size['2xl'],
-    fontFamily: typography.family.headingBold,
+    fontFamily: f.headingBold,
+    fontVariant: ['no-common-ligatures'],
     color: colors.text,
   },
   badge: {
@@ -398,7 +440,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: typography.size.sm,
-    fontFamily: typography.family.bodySemibold,
+    fontFamily: f.bodySemibold,
     color: colors.textSecondary,
   },
   badgeTextPro: {
@@ -412,12 +454,12 @@ const styles = StyleSheet.create({
   },
   extractionLabel: {
     fontSize: typography.size.base,
-    fontFamily: typography.family.body,
+    fontFamily: f.body,
     color: colors.textSecondary,
   },
   extractionValue: {
     fontSize: typography.size.base,
-    fontFamily: typography.family.bodySemibold,
+    fontFamily: f.bodySemibold,
     color: colors.text,
   },
   progressTrack: {
@@ -433,24 +475,27 @@ const styles = StyleSheet.create({
   },
   extractionHint: {
     fontSize: typography.size.sm,
-    fontFamily: typography.family.body,
+    fontFamily: f.body,
     color: colors.textMuted,
     marginTop: spacing.sm,
   },
 
-  // Section labels (matches onboarding)
+  // Section labels
   sectionLabel: {
     fontSize: typography.size['2xl'],
-    fontFamily: typography.family.headingBold,
+    fontFamily: f.headingBold,
+    fontVariant: ['no-common-ligatures'],
     color: colors.text,
     marginBottom: spacing.md,
     marginTop: spacing.lg,
+    paddingHorizontal: spacing.xl,
   },
 
-  // Diet grid (matches onboarding)
+  // Diet grid
   dietGrid: {
     flexDirection: 'row',
     gap: spacing.md,
+    paddingHorizontal: spacing.xl,
   },
   dietCard: {
     flex: 1,
@@ -471,14 +516,15 @@ const styles = StyleSheet.create({
   },
   dietLabel: {
     fontSize: typography.size.lg,
-    fontFamily: typography.family.bodySemibold,
+    fontFamily: f.bodySemibold,
   },
 
-  // Allergen grid (matches onboarding)
+  // Allergen grid
   allergenGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.md,
+    paddingHorizontal: spacing.xl,
   },
   allergenCard: {
     width: '30.5%',
@@ -511,7 +557,7 @@ const styles = StyleSheet.create({
   },
   allergenLabel: {
     fontSize: typography.size.sm,
-    fontFamily: typography.family.bodySemibold,
+    fontFamily: f.bodySemibold,
     textAlign: 'center',
   },
 
@@ -520,6 +566,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.md,
+    paddingHorizontal: spacing.xl,
   },
   cuisineCard: {
     width: '30.5%',
@@ -551,7 +598,7 @@ const styles = StyleSheet.create({
   },
   cuisineLabel: {
     fontSize: typography.size.sm,
-    fontFamily: typography.family.bodySemibold,
+    fontFamily: f.bodySemibold,
     textAlign: 'center',
   },
 });

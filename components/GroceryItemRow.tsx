@@ -13,7 +13,7 @@ interface Props {
 export function GroceryItemRow({ item, onToggle, onLongPress }: Props) {
   const textColor = colors.text;
   const subtextColor = colors.textSecondary;
-  const checkedColor = colors.checkboxChecked;
+  const checkedColor = colors.primary;
   const uncheckedColor = colors.checkboxUnchecked;
 
   return (
@@ -53,19 +53,22 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xl,
     gap: spacing.md,
   },
   content: {
     flex: 1,
   },
   name: {
-    fontSize: typography.size.lg,
-    fontWeight: typography.weight.medium,
+    fontSize: typography.size.base,
+    fontFamily: typography.family.bodySemibold,
+    color: colors.text,
   },
   quantity: {
-    fontSize: typography.size.md,
+    fontSize: typography.size.sm,
+    fontFamily: typography.family.body,
+    color: colors.textSecondary,
     marginTop: 1,
   },
   checkedText: {

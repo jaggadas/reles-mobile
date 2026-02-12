@@ -167,6 +167,7 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: typography.size["5xl"],
     fontFamily: f.headingBold,
+    fontVariant: ['no-common-ligatures'],
     letterSpacing: -0.5,
   },
   subheading: {
@@ -178,6 +179,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: typography.size["2xl"],
     fontFamily: f.headingBold,
+    fontVariant: ['no-common-ligatures'],
     marginBottom: spacing.md,
     marginTop: spacing.lg,
     alignSelf: "flex-start",

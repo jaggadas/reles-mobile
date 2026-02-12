@@ -99,7 +99,7 @@ export function PaywallModal({ visible, onPurchased, onContinueFree }: PaywallMo
             Unlock Reles Pro
           </Text>
           <Text style={styles.subtitle}>
-            Get 10 recipe extractions per week and unlock the full experience.
+            Get 50 recipe extractions per week and unlock the full experience.
           </Text>
 
           {/* Package options */}

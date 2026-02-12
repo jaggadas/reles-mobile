@@ -34,8 +34,8 @@
         "expo-font",
         {
           "fonts": [
-            "./assets/fonts/AmericanTypewriter-01.ttf",
-            "./assets/fonts/Napzer-Regular.ttf"
+            "./assets/fonts/HedvigLettersSerif-Regular.ttf",
+            "./assets/fonts/HedvigLettersSans-Regular.ttf"
           ]
         }
       ],

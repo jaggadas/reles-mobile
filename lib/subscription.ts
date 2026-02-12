@@ -3,7 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 // ── Constants (shared with server) ────────────────────────────
 
 export const FREE_WEEKLY_LIMIT = 2;
-export const PRO_WEEKLY_LIMIT = 10;
+export const PRO_WEEKLY_LIMIT = 50;
 export const TRIAL_RECIPE_LIMIT = PRO_WEEKLY_LIMIT;
 export const TRIAL_DURATION_DAYS = 7;
 export const ENTITLEMENT_ID = "Reles Pro";

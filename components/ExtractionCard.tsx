@@ -1,239 +1,253 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSequence,
+  Easing,
+  FadeIn,
+  FadeOut,
+} from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
 import type { ExtractionPhase } from '@/lib/types';
-import { colors, spacing, radius, typography, shadows } from '@/constants/colors';
+import { colors, spacing, radius, typography } from '@/constants/colors';
+
+// ── Props ─────────────────────────────────────────────────────
 
 interface Props {
   phase: ExtractionPhase;
   error?: string | null;
 }
 
-const PHASE_CONFIG: Record<ExtractionPhase, { label: string; icon: string; step: number }> = {
-  idle: { label: '', icon: '', step: 0 },
-  fetching: { label: 'Finding video', icon: 'play-circle-outline', step: 1 },
-  extracting: { label: 'Extracting recipe', icon: 'restaurant', step: 2 },
-  success: { label: 'Recipe ready!', icon: 'check-circle', step: 3 },
-};
+// ── Constants ─────────────────────────────────────────────────
 
-function ShimmerBlock({ width, height, style, shimmerAnim }: {
-  width: number | `${number}%`;
-  height: number;
-  style?: object;
-  shimmerAnim: Animated.Value;
-}) {
-  const baseColor = colors.progressTrack;
+const ALL_EMOJIS = [
+  '🍅', '🥕', '🧅', '🌶️', '🥦', '🍋', '🧄', '🫒',
+  '🥑', '🍳', '🧈', '🌿', '🍝', '🥘', '🍕', '🧀',
+  '🍗', '🥩', '🫑', '🍚', '🥧', '🍰', '🫐', '🍊',
+  '🥥', '🍇', '🫘', '🥬', '🍠', '🧁', '🥞', '🍯',
+];
 
-  const opacity = shimmerAnim.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: [0.4, 1, 0.4],
-  });
+const FETCHING_MESSAGES = [
+  'Reading the video for you',
+  'Grabbing the transcript',
+  'Preparing to extract',
+];
+
+const EXTRACTING_MESSAGES = [
+  'Extracting ingredients',
+  'Finding instructions',
+  'Analyzing the recipe',
+  'Almost there, plating up',
+];
+
+const EMOJI_COUNT = 3;
+const EMOJI_CYCLE_MS = 1200;
+
+function pickRandom(exclude: string[]): string {
+  const pool = ALL_EMOJIS.filter((e) => !exclude.includes(e));
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+// ── Cycling Emoji Slot ───────────────────────────────────────
+
+function EmojiSlot({ interval, size }: { interval: number; size: number }) {
+  const [emoji, setEmoji] = useState(() => ALL_EMOJIS[Math.floor(Math.random() * ALL_EMOJIS.length)]);
+  const prevRef = useRef(emoji);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setEmoji((prev) => {
+        const next = pickRandom([prev]);
+        prevRef.current = prev;
+        return next;
+      });
+    }, interval);
+    return () => clearInterval(id);
+  }, [interval]);
 
   return (
-    <Animated.View
-      style={[
-        {
-          width,
-          height,
-          borderRadius: radius.sm,
-          backgroundColor: baseColor,
-          opacity,
-        },
-        style,
-      ]}
-    />
+    <View style={styles.emojiSlot}>
+      <Animated.Text
+        key={emoji}
+        entering={FadeIn.duration(300)}
+        exiting={FadeOut.duration(300)}
+        style={{ fontSize: size, lineHeight: size * 1.2, textAlign: 'center' }}
+      >
+        {emoji}
+      </Animated.Text>
+    </View>
   );
 }
 
-export function ExtractionCard({ phase, error }: Props) {
-  const shimmerAnim = useRef(new Animated.Value(0)).current;
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+// ── Progress Bar ──────────────────────────────────────────────
 
-  const cardBg = colors.card;
-  const textColor = colors.text;
-  const subtextColor = colors.textSecondary;
-  const errorColor = colors.error;
-  const errorBg = colors.errorLight;
-  const successColor = colors.success;
-  const primaryColor = colors.primary;
-  const progressTrack = colors.progressTrack;
-  const borderColor = colors.borderLight;
+function ProgressBar({ phase }: { phase: ExtractionPhase }) {
+  const width = useSharedValue(0);
 
   useEffect(() => {
-    if (phase !== 'idle') {
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-
-      const loop = Animated.loop(
-        Animated.timing(shimmerAnim, {
-          toValue: 1,
-          duration: 1500,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
+    if (phase === 'fetching') {
+      width.value = withTiming(30, { duration: 4000, easing: Easing.out(Easing.quad) });
+    } else if (phase === 'extracting') {
+      width.value = withSequence(
+        withTiming(55, { duration: 600, easing: Easing.out(Easing.quad) }),
+        withTiming(92, { duration: 20000, easing: Easing.linear }),
       );
-      loop.start();
-
-      return () => loop.stop();
     } else {
-      fadeAnim.setValue(0);
+      width.value = withTiming(100, { duration: 300 });
     }
   }, [phase]);
+
+  const animStyle = useAnimatedStyle(() => ({
+    width: `${width.value}%`,
+  }));
+
+  return (
+    <View style={styles.progressTrack}>
+      <Animated.View style={[styles.progressFill, animStyle]} />
+    </View>
+  );
+}
+
+// ── Main Component ────────────────────────────────────────────
+
+export function ExtractionCard({ phase, error }: Props) {
+  const [messageIndex, setMessageIndex] = useState(0);
+  const [prevPhase, setPrevPhase] = useState<ExtractionPhase>('idle');
+
+  const messages = phase === 'fetching' ? FETCHING_MESSAGES : EXTRACTING_MESSAGES;
+
+  // Phase transition haptic
+  useEffect(() => {
+    if (prevPhase === 'fetching' && phase === 'extracting') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setPrevPhase(phase);
+  }, [phase]);
+
+  // Cycle messages
+  useEffect(() => {
+    if (phase === 'idle') {
+      setMessageIndex(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setMessageIndex((prev) => (prev + 1) % messages.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [phase, messages.length]);
 
   if (phase === 'idle' && !error) return null;
 
   if (error) {
     return (
-      <View style={[styles.errorCard, { backgroundColor: errorBg, borderColor: errorColor }]}>
-        <MaterialIcons name="error-outline" size={20} color={errorColor} />
-        <Text style={[styles.errorText, { color: errorColor }]}>{error}</Text>
+      <View style={styles.errorCard}>
+        <MaterialIcons name="error-outline" size={20} color={colors.error} />
+        <Text style={styles.errorText}>{error}</Text>
       </View>
     );
   }
 
-  const config = PHASE_CONFIG[phase];
-  const isSuccess = phase === 'success';
-  const totalSteps = 2;
-  const currentStep = Math.min(config.step, totalSteps);
-
   return (
-    <Animated.View style={[styles.wrapper, { opacity: fadeAnim }]}>
-      {/* Status header */}
-      <View style={[styles.statusBar, { backgroundColor: cardBg, borderColor: borderColor }]}>
-        <View style={styles.statusLeft}>
-          <MaterialIcons
-            name={config.icon as any}
-            size={20}
-            color={isSuccess ? successColor : primaryColor}
-          />
-          <Text style={[
-            styles.statusLabel,
-            { color: isSuccess ? successColor : textColor },
-          ]}>
-            {config.label}
-          </Text>
-        </View>
-        {!isSuccess && (
-          <Text style={[styles.stepLabel, { color: subtextColor }]}>
-            Step {currentStep}/{totalSteps}
-          </Text>
-        )}
-      </View>
-
-      {/* Progress dots */}
-      {!isSuccess && (
-        <View style={styles.progressDots}>
-          {Array.from({ length: totalSteps }).map((_, i) => (
-            <View
+    <Animated.View entering={FadeIn.duration(400)} style={styles.wrapper}>
+      <View style={styles.card}>
+        {/* Emoji row */}
+        <View style={styles.emojiRow}>
+          {Array.from({ length: EMOJI_COUNT }).map((_, i) => (
+            <EmojiSlot
               key={i}
-              style={[
-                styles.dot,
-                {
-                  backgroundColor:
-                    i < currentStep
-                      ? primaryColor
-                      : progressTrack,
-                },
-              ]}
+              interval={EMOJI_CYCLE_MS + i * 400}
+              size={36}
             />
           ))}
         </View>
-      )}
 
-      {/* Skeleton recipe card */}
-      {!isSuccess && (
-        <View style={[styles.skeletonCard, { backgroundColor: cardBg, borderColor: borderColor }]}>
-          {/* Thumbnail skeleton */}
-          <ShimmerBlock width="100%" height={160} shimmerAnim={shimmerAnim} style={{ borderRadius: radius.md }} />
-
-          {/* Content skeleton */}
-          <View style={styles.skeletonContent}>
-            {/* Title */}
-            <ShimmerBlock width="75%" height={20} shimmerAnim={shimmerAnim} />
-            <ShimmerBlock width="50%" height={14} shimmerAnim={shimmerAnim} style={{ marginTop: 8 }} />
-
-            {/* Meta row */}
-            <View style={styles.skeletonMetaRow}>
-              <ShimmerBlock width={70} height={28} shimmerAnim={shimmerAnim} style={{ borderRadius: radius.full }} />
-              <ShimmerBlock width={70} height={28} shimmerAnim={shimmerAnim} style={{ borderRadius: radius.full }} />
-              <ShimmerBlock width={70} height={28} shimmerAnim={shimmerAnim} style={{ borderRadius: radius.full }} />
-            </View>
-
-            {/* Ingredient lines */}
-            <View style={styles.skeletonLines}>
-              <ShimmerBlock width="90%" height={12} shimmerAnim={shimmerAnim} />
-              <ShimmerBlock width="70%" height={12} shimmerAnim={shimmerAnim} />
-              <ShimmerBlock width="80%" height={12} shimmerAnim={shimmerAnim} />
-              <ShimmerBlock width="60%" height={12} shimmerAnim={shimmerAnim} />
-            </View>
-          </View>
+        {/* Status text */}
+        <View style={styles.messageContainer}>
+          <Animated.Text
+            key={`${phase}-${messageIndex}`}
+            entering={FadeIn.duration(350)}
+            exiting={FadeOut.duration(350)}
+            style={styles.messageText}
+          >
+            {messages[messageIndex]}
+          </Animated.Text>
         </View>
-      )}
+
+        {/* Progress bar */}
+        <View style={styles.progressSection}>
+          <ProgressBar phase={phase} />
+        </View>
+      </View>
     </Animated.View>
   );
 }
+
+// ── Styles ────────────────────────────────────────────────────
 
 const f = typography.family;
 
 const styles = StyleSheet.create({
   wrapper: {
-    paddingHorizontal: spacing.lg,
-    gap: spacing.md,
-    marginBottom: spacing.md,
+    marginBottom: spacing.xl,
   },
-  statusBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-  },
-  statusLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  statusLabel: {
-    fontSize: typography.size.xl,
-    fontFamily: f.bodySemibold,
-  },
-  stepLabel: {
-    fontSize: typography.size.sm,
-    fontFamily: f.bodyMedium,
-  },
-  progressDots: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  dot: {
-    flex: 1,
-    height: 4,
-    borderRadius: 2,
-  },
-  skeletonCard: {
+  card: {
     borderRadius: radius.xl,
+    backgroundColor: colors.card,
     borderWidth: 1,
+    borderColor: colors.borderLight,
     overflow: 'hidden',
-    ...shadows.sm,
+    paddingTop: spacing['2xl'],
+    paddingBottom: spacing.xl,
   },
-  skeletonContent: {
-    padding: spacing.lg,
-    gap: spacing.xs,
-  },
-  skeletonMetaRow: {
+
+  // ── Emoji row ─────────────────────────────────────────
+  emojiRow: {
     flexDirection: 'row',
-    gap: spacing.sm,
-    marginTop: spacing.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: spacing.xl,
+    marginBottom: spacing.lg,
   },
-  skeletonLines: {
-    marginTop: spacing.lg,
-    gap: spacing.md,
+  emojiSlot: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
+
+  // ── Message ─────────────────────────────────────────────
+  messageContainer: {
+    height: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.xl,
+  },
+  messageText: {
+    fontSize: typography.size.base,
+    fontFamily: f.bodySemibold,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
+
+  // ── Progress bar ──────────────────────────────────────
+  progressSection: {
+    paddingHorizontal: spacing.xl,
+  },
+  progressTrack: {
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.progressTrack,
+  },
+  progressFill: {
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.primary,
+  },
+
+  // ── Error ─────────────────────────────────────────────
   errorCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -244,10 +258,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     borderRadius: radius.lg,
     borderWidth: 1,
+    borderColor: colors.error,
+    backgroundColor: colors.errorLight,
   },
   errorText: {
     flex: 1,
     fontSize: typography.size.base,
     fontFamily: f.bodyMedium,
+    color: colors.error,
   },
 });
