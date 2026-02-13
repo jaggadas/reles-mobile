@@ -60,6 +60,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "9572c8eb-7038-46d8-8a86-05835ed831c4"
+      }
+    },
+    "owner": "jaya_karthi"
   }
 }
