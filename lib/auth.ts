@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { AuthResponse, UserProfile, UserPreferences } from "./auth-types";
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = "https://reles-server-production.up.railway.app";
 const AUTH_TOKEN_KEY = "reles_auth_token";
 
 // ─── Token Storage ──────────────────────────────────────────

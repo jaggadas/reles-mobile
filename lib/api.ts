@@ -10,7 +10,7 @@ import type {
 export type { VideoSearchResult };
 import { getAuthHeaders, clearAuthToken } from "./auth";
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = "https://reles-server-production.up.railway.app";
 
 async function authFetch(url: string, init?: RequestInit): Promise<Response> {
   const headers = await getAuthHeaders();
