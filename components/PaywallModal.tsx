@@ -7,6 +7,7 @@ import {
   Modal,
   ActivityIndicator,
   Alert,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -102,9 +103,11 @@ export function PaywallModal({ visible, onPurchased, onContinueFree }: PaywallMo
         {/* Content */}
         <View style={styles.content}>
           {/* Hero icon */}
-          <View style={styles.iconContainer}>
-            <MaterialIcons name="workspace-premium" size={36} color={colors.success} />
-          </View>
+          <Image
+            source={require('@/assets/icons/reles-prof.png')}
+            style={styles.proIcon}
+            resizeMode="contain"
+          />
 
           {/* Features card */}
           <View style={styles.featuresCard}>
@@ -268,14 +271,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.lg,
   },
-  iconContainer: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    justifyContent: 'center',
-    alignItems: 'center',
+  proIcon: {
+    width: 180,
+    height: 90,
     marginBottom: spacing.lg,
-    backgroundColor: colors.successLight,
   },
 
   // ── Features Card ──────────────────────────────────────
