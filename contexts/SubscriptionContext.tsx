@@ -22,7 +22,7 @@ import { PaywallModal } from "@/components/PaywallModal";
 import { useAuth } from "@/contexts/AuthContext";
 
 // ── API Keys ──
-const PRODUCTION_KEYS = { apple: "appl_hIsGqZRomubNlgOOyfcBBAVFrQg"} 
+const PRODUCTION_KEYS = { apple: "appl_hIsGqZRomubNlgOOyfcBBAVFrQg", android: "goog_wDItMPaIxDJtLjuolAWLcyaXCrL"} 
 
 interface SubscriptionContextValue {
   isPro: boolean;
@@ -52,7 +52,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         if (__DEV__) {
           Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
         }
-        await Purchases.configure({ apiKey: PRODUCTION_KEYS.apple });
+        await Purchases.configure({ apiKey: PRODUCTION_KEYS.android });
       } catch (e) {
         console.warn("RevenueCat init error:", e);
       } finally {
