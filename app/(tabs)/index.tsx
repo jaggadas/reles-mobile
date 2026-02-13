@@ -112,7 +112,7 @@ export default function DiscoverScreen() {
   const lastSearchKey = useRef<string | null>(null);
   const skipNextDebounce = useRef(false);
 
-  const hasSearchContent = query.trim().length > 0 || searchResults.length > 0 || isSearching;
+  const hasSearchContent = searchResults.length > 0 || isSearching;
 
   // Refocus input after view switches from ScrollView to FlatList (which remounts the TextInput)
   useEffect(() => {

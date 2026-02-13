@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   Pressable,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -29,6 +30,7 @@ export default function OnboardingNameScreen() {
   } = useOnboardingName();
 
   const { top: safeTop } = useSafeAreaInsets();
+  const scrollRef = useRef<ScrollView>(null);
 
   return (
     <View style={styles.container}>
@@ -52,6 +54,12 @@ export default function OnboardingNameScreen() {
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
+        <ScrollView
+          ref={scrollRef}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
         <View style={styles.illustrationSection}>
           <Image
             source={require("@/assets/illustrations/lets-get-to-know-you.png")}
@@ -96,6 +104,7 @@ export default function OnboardingNameScreen() {
               onChangeText={setPassword}
               secureTextEntry
               autoComplete="new-password"
+              onFocus={() => setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 300)}
             />
           </View>
 
@@ -111,6 +120,7 @@ export default function OnboardingNameScreen() {
             size="lg"
           />
         </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </View>
   );
@@ -165,6 +175,9 @@ const styles = StyleSheet.create({
 
   flex: {
     flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   illustrationSection: {
     alignItems: "center",
